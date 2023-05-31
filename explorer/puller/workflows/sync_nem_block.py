@@ -7,6 +7,7 @@ from zenlog import log
 
 from facade.NemPullerFacade import NemPullerFacade
 from model.Block import Block
+from model.Transaction import Transaction, TransferTransaction
 
 
 def parse_args():
@@ -23,6 +24,7 @@ async def save_nemesis_block(nem_client, databases, nem_facade):
 
 	block = await nem_client.get_block(1)
 
+	# process Block
 	save_block = Block(
 		block['height'],
 		Block.convert_timestamp_to_datetime(nem_facade, block['timeStamp']),
@@ -34,6 +36,58 @@ async def save_nemesis_block(nem_client, databases, nem_facade):
 	)
 
 	databases.insert_block(save_block.to_dict())
+
+	# process Transaction
+	transactions_list = []
+	transactions_transfer = []
+
+	for index, transaction in enumerate(block['transactions'], start=1):
+		save_transaction = Transaction(
+			hash=f'#NemesisBlock# {index}',
+			height=1,
+			sender=str(nem_facade.network.public_key_to_address(PublicKey(transaction['signer']))),
+			fee=transaction['fee'],
+			timestamp=Block.convert_timestamp_to_datetime(nem_facade, transaction['timeStamp']),
+			deadline=Block.convert_timestamp_to_datetime(nem_facade, transaction['deadline']),
+			signature=transaction['signature'],
+			version=transaction['version'],
+			type=transaction['type'],
+			is_apostille=False,
+			is_mosaic_transfer=False,
+			is_aggregate=False
+		)
+
+		if 257 == transaction['type']:
+			save_transfer_transaction = TransferTransaction(
+				hash=f'#NemesisBlock# {index}',
+				amount=transaction['amount'] if 'amount' in transaction else 0,
+				recipient=transaction['recipient'] if 'recipient' in transaction else None,
+				message_payload=transaction['message']['payload'] if 'message' in transaction else None,
+				message_type=transaction['message']['type'] if 'message' in transaction else None
+			)
+
+			transactions_transfer.append(save_transfer_transaction)
+
+		transactions_list.append(save_transaction)
+
+	databases.insert_transactions([(
+		t.hash,
+		t.height,
+		t.sender,
+		t.fee,
+		t.timestamp,
+		t.deadline,
+		t.signature,
+		t.version,
+		t.type,
+		t.is_apostille,
+		t.is_mosaic_transfer,
+		t.is_aggregate)
+		for t in transactions_list
+	])
+	databases.insert_transactions_transfer([
+		(t.hash, t.amount, t.recipient, t.message_payload, t.message_type) for t in transactions_transfer
+	])
 
 
 async def sync_blocks(nem_client, databases, db_height, chain_height, nem_facade):
@@ -74,13 +128,13 @@ async def main():
 		log.info(f'current database height: {db_height}')
 		chain_height = await nem_client.height()
 
-		# save Nemenesis Block
+		# save Nemesis Block
 		if db_height == 0:
 			await save_nemesis_block(nem_client, databases, nem_facade)
 			db_height = 1
 
 		# sync network blocks in database
-		await sync_blocks(nem_client, databases, db_height, chain_height, nem_facade)
+		# await sync_blocks(nem_client, databases, db_height, chain_height, nem_facade)
 
 		log.info('Database is up to date')
 
