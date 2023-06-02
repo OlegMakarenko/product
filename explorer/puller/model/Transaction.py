@@ -9,10 +9,7 @@ class Transaction:
 		deadline,
 		signature,
 		version,
-		type,
-		is_apostille,
-		is_mosaic_transfer,
-		is_aggregate
+		type
 	):
 		"""Create Transaction model."""
 
@@ -27,17 +24,15 @@ class Transaction:
 		self.signature = signature
 		self.version = version
 		self.type = type
-		self.is_apostille = is_apostille
-		self.is_mosaic_transfer = is_mosaic_transfer
-		self.is_aggregate = is_aggregate
 
 
 class TransferTransaction:
-	def __init__(self, hash, amount, recipient, message_payload, message_type):
+	def __init__(self, hash, amount, mosaics, recipient, message, is_apostille):
 		"""Create TransferTransaction model."""
 
 		self.hash = hash
 		self.amount = amount
+		self.mosaics = mosaics
 		self.recipient = recipient
-		self.message_payload = message_payload
-		self.message_type = message_type
+		self.message = message
+		self.is_apostille = is_apostille

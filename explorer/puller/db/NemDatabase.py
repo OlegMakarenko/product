@@ -1,5 +1,5 @@
 from db.DatabaseConnection import DatabaseConnection
-
+from zenlog import log
 
 class NemDatabase(DatabaseConnection):
 	"""Database containing Nem blockchain data."""
@@ -22,28 +22,26 @@ class NemDatabase(DatabaseConnection):
 
 		# Create transactions table
 		cursor.execute('''CREATE TABLE IF NOT EXISTS transactions (
-			hash VARCHAR(64) NOT NULL,
+			hash varchar(64) NOT NULL,
 			height bigint NOT NULL,
-			sender VARCHAR(40),
+			sender varchar(40),
 			fee bigint NOT NULL,
 			timestamp timestamp NOT NULL,
 			deadline timestamp NOT NULL,
-			signature VARCHAR(128) NOT NULL,
-			version VARCHAR(10) NOT NULL,
-			type VARCHAR(20) NOT NULL,
-			isApostille boolean,
-			isMosaicTransfer boolean,
-			isAggregate boolean,
+			signature varchar(128) NOT NULL,
+			version varchar(10) NOT NULL,
+			type varchar(20) NOT NULL,
 			PRIMARY KEY (hash)
 		)''')
 
 		# Create transfer transactions table
 		cursor.execute('''CREATE TABLE IF NOT EXISTS transfer_transactions (
-			hash VARCHAR(64) NOT NULL,
+			hash varchar(64) NOT NULL,
 			amount bigint NOT NULL,
-			recipient VARCHAR(40) NOT NULL,
-			messagePayload VARCHAR(1024),
-			messageType integer,
+			mosaics json,
+			recipient varchar(40) NOT NULL,
+			message json,
+			isApostille boolean DEFAULT false,
 			PRIMARY KEY (hash),
 			FOREIGN KEY (hash) REFERENCES transactions(hash) ON DELETE CASCADE
 		)''')
@@ -68,27 +66,44 @@ class NemDatabase(DatabaseConnection):
 	def insert_transactions(self, transactions):
 		"""Adds transactions into transactions table"""
 
-		print(f"Inserting transactions into database... {len(transactions)}")
+		log.info(f"Inserting transactions into database... {len(transactions)}")
 
 		cursor = self.connection.cursor()
 
 		cursor.executemany(
-			'''INSERT INTO transactions VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
-			transactions
+			'''INSERT INTO transactions VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+			list((
+				tx.hash,
+				tx.height,
+				tx.sender,
+				tx.fee,
+				tx.timestamp,
+				tx.deadline,
+				tx.signature,
+				tx.version,
+				tx.type
+			) for tx in transactions)
 		)
 
 		self.connection.commit()
 
-	def insert_transactions_transfer(self, transfer):
+	def insert_transactions_transfer(self, transfer_transactions):
 		"""Adds transfer into transfer_transactions table"""
+
+		log.info(f"Inserting transfer transactions into database... {len(transfer_transactions)}")
 
 		cursor = self.connection.cursor()
 
-		print(transfer)
-
 		cursor.executemany(
-			'''INSERT INTO transfer_transactions VALUES (%s, %s, %s, %s, %s)''',
-			transfer
+			'''INSERT INTO transfer_transactions VALUES (%s, %s, %s, %s, %s, %s)''',
+			list((
+				t.hash,
+				t.amount,
+				t.mosaics,
+				t.recipient,
+				t.message,
+				t.is_apostille
+			) for t in transfer_transactions)
 		)
 
 		self.connection.commit()
