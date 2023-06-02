@@ -1,4 +1,7 @@
 import argparse
+import binascii
+import json
+
 from asyncio import run
 
 from symbolchain.CryptoTypes import PublicKey
@@ -9,6 +12,8 @@ from facade.NemPullerFacade import NemPullerFacade
 from model.Block import Block
 from model.Transaction import Transaction, TransferTransaction
 
+APOSTILLE_ADDRESS = 'NCZSJHLTIMESERVBVKOW6US64YDZG2PFGQCSV23J'
+
 
 def parse_args():
 	"""Parse command line arguments."""
@@ -17,6 +22,53 @@ def parse_args():
 	parser.add_argument('--nem-node', help='NEM node(local) url', default='http://localhost:7890')
 	parser.add_argument('--db-config', help='database config file *.ini', default='config.ini')
 	return parser.parse_args()
+
+def _process_transaction(databases, nem_facade, block_transaction):
+	transactions_list = []
+	transfer_transactions = []
+
+	height = block_transaction['height']
+
+	for tx in block_transaction['txes']:
+		transaction = tx['tx']
+		transaction_hash = tx['hash']
+		save_transaction = Transaction(
+			hash=tx['hash'],
+			height=height,
+			sender=str(nem_facade.network.public_key_to_address(PublicKey(transaction['signer']))),
+			fee=transaction['fee'],
+			timestamp=Block.convert_timestamp_to_datetime(nem_facade, transaction['timeStamp']),
+			deadline=Block.convert_timestamp_to_datetime(nem_facade, transaction['deadline']),
+			signature=transaction['signature'],
+			version=transaction['version'],
+			type=transaction['type']
+		)
+
+		# process TransferTransaction
+		if 257 == transaction['type']:
+			is_apostille = False
+
+			if transaction['recipient'] == APOSTILLE_ADDRESS and transaction['message'] and transaction['message']['type'] and transaction['message']['type'] == 1:
+				message = binascii.unhexlify(transaction['message']['payload'])
+				if message.startswith(b'HEX:'):
+					is_apostille = True
+
+			print(transaction['mosaics'] if 'mosaics' in transaction else None)
+			save_transfer_transaction = TransferTransaction(
+				hash=transaction_hash,
+				amount=transaction['amount'] if 'amount' in transaction else 0,
+				mosaics = json.dumps(transaction['mosaics']) if 'mosaics' in transaction else None,
+				recipient= transaction['recipient'] if 'recipient' in transaction else None,
+				message= json.dumps(transaction['message']) if 'message' in transaction else None,
+				is_apostille= is_apostille
+			)
+
+			transfer_transactions.append(save_transfer_transaction)
+
+		transactions_list.append(save_transaction)
+
+	databases.insert_transactions(transactions_list)
+	databases.insert_transactions_transfer(transfer_transactions)
 
 
 async def save_nemesis_block(nem_client, databases, nem_facade):
@@ -38,56 +90,14 @@ async def save_nemesis_block(nem_client, databases, nem_facade):
 	databases.insert_block(save_block.to_dict())
 
 	# process Transaction
-	transactions_list = []
-	transactions_transfer = []
-
-	for index, transaction in enumerate(block['transactions'], start=1):
-		save_transaction = Transaction(
-			hash=f'#NemesisBlock# {index}',
-			height=1,
-			sender=str(nem_facade.network.public_key_to_address(PublicKey(transaction['signer']))),
-			fee=transaction['fee'],
-			timestamp=Block.convert_timestamp_to_datetime(nem_facade, transaction['timeStamp']),
-			deadline=Block.convert_timestamp_to_datetime(nem_facade, transaction['deadline']),
-			signature=transaction['signature'],
-			version=transaction['version'],
-			type=transaction['type'],
-			is_apostille=False,
-			is_mosaic_transfer=False,
-			is_aggregate=False
-		)
-
-		if 257 == transaction['type']:
-			save_transfer_transaction = TransferTransaction(
-				hash=f'#NemesisBlock# {index}',
-				amount=transaction['amount'] if 'amount' in transaction else 0,
-				recipient=transaction['recipient'] if 'recipient' in transaction else None,
-				message_payload=transaction['message']['payload'] if 'message' in transaction else None,
-				message_type=transaction['message']['type'] if 'message' in transaction else None
-			)
-
-			transactions_transfer.append(save_transfer_transaction)
-
-		transactions_list.append(save_transaction)
-
-	databases.insert_transactions([(
-		t.hash,
-		t.height,
-		t.sender,
-		t.fee,
-		t.timestamp,
-		t.deadline,
-		t.signature,
-		t.version,
-		t.type,
-		t.is_apostille,
-		t.is_mosaic_transfer,
-		t.is_aggregate)
-		for t in transactions_list
-	])
-	databases.insert_transactions_transfer([
-		(t.hash, t.amount, t.recipient, t.message_payload, t.message_type) for t in transactions_transfer
-	])
+	_process_transaction(databases, nem_facade, {
+		'txes': [{
+			'tx': tx,
+			'hash': f'#NemesisBlock# {index}'
+		} for index, tx in enumerate(block['transactions'], start=1)
+		],
+		'height': block['height']
+	})
 
 
 async def sync_blocks(nem_client, databases, db_height, chain_height, nem_facade):
@@ -101,6 +111,12 @@ async def sync_blocks(nem_client, databases, db_height, chain_height, nem_facade
 		for block in blocks['data']:
 			save_block = Block.from_nem_block_data(block, nem_facade)
 			databases.insert_block(save_block.to_dict())
+
+			# process Transaction
+			_process_transaction(databases, nem_facade, {
+				'txes': block['txes'],
+				'height': block['block']['height']
+			})
 
 		db_height = blocks['data'][-1]['block']['height']
 
@@ -134,7 +150,7 @@ async def main():
 			db_height = 1
 
 		# sync network blocks in database
-		# await sync_blocks(nem_client, databases, db_height, chain_height, nem_facade)
+		await sync_blocks(nem_client, databases, db_height, chain_height, nem_facade)
 
 		log.info('Database is up to date')
 
