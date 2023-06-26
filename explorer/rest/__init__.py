@@ -43,6 +43,9 @@ def setup_nem_routes(app, nem_api_facade):
 		offset = int(request.args.get('offset', 0))
 		sort = request.args.get('sort', 'DESC')
 
+		if sort.upper() not in ['ASC', 'DESC']:
+			abort(400)
+
 		return jsonify(nem_api_facade.get_blocks(limit=limit, offset=offset, sort=sort))
 
 def setup_error_handlers(app):
@@ -53,3 +56,11 @@ def setup_error_handlers(app):
 			'message': 'Resource not found'
 		}
 		return jsonify(response), 404
+
+	@app.errorhandler(400)
+	def bad_request(_):
+		response = {
+			'status': 400,
+			'message': 'Bad request'
+		}
+		return jsonify(response), 400
