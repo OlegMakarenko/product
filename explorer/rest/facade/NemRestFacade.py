@@ -25,8 +25,9 @@ class NemRestFacade:
 
 		limit = kwargs.get('limit')
 		offset = kwargs.get('offset')
+		sort = kwargs.get('sort')
 
 		with self.nem_db as db:
-			blocks = db.get_blocks(limit, offset)
+			blocks = db.get_blocks(limit, offset, sort)
 
 		return [Block(**block).to_dict() for block in blocks]
