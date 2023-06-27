@@ -1,6 +1,7 @@
 import asyncio
 import gettext
 import importlib
+import shutil
 import tempfile
 from collections import namedtuple
 from pathlib import Path
@@ -14,13 +15,13 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.widgets import Label
 from prompt_toolkit.widgets.toolbars import ValidationToolbar
 
-from shoestring.commands.setup import run_main as run_setup
+from shoestring.__main__ import main as shoestring_main
 from shoestring.wizard.SetupFiles import prepare_overrides_file, prepare_shoestring_files
+from shoestring.wizard.ShoestringOperation import ShoestringOperation, build_shoestring_command
 
 from . import keybindings, navigation, styles
 from .Screens import Screens
 
-SetupArgs = namedtuple('SetupArgs', ['config', 'package', 'directory', 'overrides', 'ca_key_path'])
 ScreenGroup = namedtuple('ScreenGroup', ['group_name', 'screen_names'])
 
 
@@ -49,6 +50,39 @@ def update_titlebar(root_container, screens):
 	current_group = screens.group_name[screens.current_id]
 	elements = [f'<b>{name}</b>' if current_group == name else name for name in screens.ordered_group_names]
 	root_container.children[0].content.text = HTML(' -&gt; '.join(elements))
+
+
+async def run_shoestring_command(screens):
+	obligatory_settings = screens.get('obligatory')
+	destination_directory = Path(obligatory_settings.destination_directory)
+	shoestring_directory = destination_directory / 'shoestring'
+
+	operation = screens.get('welcome').accessor.current_value
+	package = screens.get('network-type').current_value
+
+	if ShoestringOperation.SETUP == operation:
+		with tempfile.TemporaryDirectory() as temp_directory:
+			prepare_overrides_file(screens, Path(temp_directory) / 'overrides.ini')
+			await prepare_shoestring_files(screens, Path(temp_directory))
+
+			shoestring_args = build_shoestring_command(
+				operation,
+				destination_directory,
+				temp_directory,
+				obligatory_settings.ca_pem_path,
+				package)
+			await shoestring_main(shoestring_args)
+
+			shoestring_directory.mkdir()
+			for filename in ('shoestring.ini', 'overrides.ini'):
+				shutil.copy(Path(temp_directory) / filename, shoestring_directory)
+	else:
+		shoestring_args = build_shoestring_command(
+			operation,
+			destination_directory,
+			shoestring_directory,
+			obligatory_settings.ca_pem_path,
+			package)
 
 
 async def main():
@@ -117,20 +151,7 @@ async def main():
 		return
 
 	# TODO: temporary here, move up
-	with tempfile.TemporaryDirectory() as temp_directory:
-		prepare_overrides_file(screens, Path(temp_directory) / 'overrides.ini')
-		await prepare_shoestring_files(screens, Path(temp_directory))
-
-		obligatory_settings = screens.get('obligatory')
-		destination_directory = Path(obligatory_settings.destination_directory)
-
-		await run_setup(SetupArgs(
-			config=Path(temp_directory) / 'shoestring.ini',
-			package=screens.get('network-type').current_value,
-			directory=destination_directory.absolute(),
-			overrides=Path(temp_directory) / 'overrides.ini',
-			ca_key_path=Path(obligatory_settings.ca_pem_path)
-		))
+	await run_shoestring_command(screens)
 
 	print('Done 👋')
 
