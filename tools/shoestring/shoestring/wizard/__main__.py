@@ -162,6 +162,7 @@ async def main():
 	# set welcome screen button handlers
 
 	button_screens = {
+		ShoestringOperation.UPGRADE: ['obligatory', 'network-type', 'end-screen'],
 		ShoestringOperation.RESET_DATA: ['obligatory', 'end-screen'],
 		ShoestringOperation.RENEW_CERTIFICATES: ['obligatory', 'end-screen'],
 		ShoestringOperation.RENEW_VOTING_KEYS: ['obligatory', 'end-screen']
