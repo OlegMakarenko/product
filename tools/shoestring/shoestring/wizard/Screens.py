@@ -3,6 +3,7 @@ class Screens:
 		self.navbar = navbar  # added so that screens can access and modify it directly
 		self.ordered = []
 		self.current_id = 0
+		# TODO: this needs to become property to handle allowed_list filtering
 		self.ordered_group_names = []
 		self.group_name = []
 
