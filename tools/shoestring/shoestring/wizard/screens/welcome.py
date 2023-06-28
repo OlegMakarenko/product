@@ -33,11 +33,14 @@ def create(_screens):
 						FormattedTextControl(_('wizard-welcome-title')),
 						align=WindowAlign.CENTER
 					),
-					HSplit([
-						Box(button, padding_top=0, padding_bottom=1) for button in buttons
-					])
+					Box(
+						HSplit([
+							Box(button, padding_top=1, padding_bottom=0) for button in buttons
+						]),
+						style='class:navigation'
+					)
 				],
-				style='class:navigation')
+				style='class:dialog.body')
 		)),
 		accessor = buttons,
 		hide_navbar=True
