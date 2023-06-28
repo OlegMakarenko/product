@@ -61,6 +61,7 @@ async def run_shoestring_command(screens):
 	destination_directory = Path(obligatory_settings.destination_directory)
 	shoestring_directory = destination_directory / 'shoestring'
 
+	# TODO: fix this
 	operation = screens.get('welcome').accessor.current_value
 	package = screens.get('network-type').current_value
 
@@ -160,9 +161,17 @@ async def main():
 
 	# set welcome screen button handlers
 
+	button_screens = {
+		ShoestringOperation.RESET_DATA: ['obligatory', 'end-screen'],
+		ShoestringOperation.RENEW_CERTIFICATES: ['obligatory', 'end-screen'],
+		ShoestringOperation.RENEW_VOTING_KEYS: ['obligatory', 'end-screen']
+	}
+
+	default_screens = [screen.screen_id for screen in screens.ordered]
 	def create_button_handler(button):
 		def button_handler():
-			screens.set_list(None)
+			wanted_screens = button_screens.get(button.operation, default_screens)
+			screens.set_list(wanted_screens)
 			next_clicked()
 
 		return button_handler

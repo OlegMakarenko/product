@@ -6,6 +6,7 @@ class Screens:
 		self.ordered_group_names = []
 		self.group_name = []
 
+		self.allowed_list = None
 		self.chain = []
 
 	def add(self, screen_group_name, descriptor):
@@ -20,7 +21,7 @@ class Screens:
 		return self.ordered[index].accessor
 
 	def set_list(self, list):
-		pass
+		self.allowed_list = list
 
 	@property
 	def current(self):
@@ -41,7 +42,7 @@ class Screens:
 
 		next_id = self.current_id + 1
 		while next_id != len(self.ordered):
-			if self.ordered[next_id].should_show():
+			if self.ordered[next_id].screen_id in self.allowed_list and	self.ordered[next_id].should_show():
 				break
 
 			next_id = next_id + 1

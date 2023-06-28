@@ -6,9 +6,11 @@ from shoestring.wizard.Screen import Screen
 from shoestring.wizard.ShoestringOperation import ShoestringOperation
 
 
-def _attach_operation(button, operation):
-	button.operation = operation
-	return button
+class ButtonWithOperation(Button):
+	def __init__(self, operation, label, width=12):
+		super().__init__(label, width=width)
+		self.operation = operation
+
 
 def create(_screens):
 	values=[
@@ -21,7 +23,7 @@ def create(_screens):
 
 	max_label = max(len(label) for (_, label) in values)
 	buttons = [
-		_attach_operation(Button(label, width=max_label+3), operation)
+		ButtonWithOperation(operation, label, width=max_label+3)
 		for (operation, label) in values
 	]
 
@@ -42,6 +44,6 @@ def create(_screens):
 				],
 				style='class:dialog.body')
 		)),
-		accessor = buttons,
+		accessor=buttons,
 		hide_navbar=True
 	)
