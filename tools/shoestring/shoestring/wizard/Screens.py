@@ -19,9 +19,15 @@ class Screens:
 		index = [screen.screen_id for screen in self.ordered].index(screen_id)
 		return self.ordered[index].accessor
 
+	def set_list(self, list):
+		pass
+
 	@property
 	def current(self):
 		return self.ordered[self.current_id]
+
+	def has_previous(self):
+		return bool(self.chain)
 
 	def previous(self):
 		if not self.chain:

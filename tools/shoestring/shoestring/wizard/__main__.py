@@ -46,10 +46,14 @@ def prepare_screens(screens):
 			screens.add(group.group_name, screen)
 
 
+def set_titlebar(root_container, text):
+	root_container.children[0].content.text = HTML(text)
+
+
 def update_titlebar(root_container, screens):
 	current_group = screens.group_name[screens.current_id]
 	elements = [f'<b>{name}</b>' if current_group == name else name for name in screens.ordered_group_names]
-	root_container.children[0].content.text = HTML(' -&gt; '.join(elements))
+	set_titlebar(root_container, ' -&gt; '.join(elements))
 
 
 async def run_shoestring_command(screens):
@@ -121,7 +125,8 @@ async def main():
 	])
 	navbar.next.state_filter = Condition(lambda: not screens.current.is_valid())
 
-	update_titlebar(root_container, screens)
+	initial_titlebar = '<b>Welcome, pick operation</b>'
+	set_titlebar(root_container, initial_titlebar)
 
 	layout = Layout(root_container, focused_element=navbar.next)
 
@@ -129,9 +134,14 @@ async def main():
 
 	layout.focus(root_container.children[2])
 
+	# set navigation bar button handlers
+
 	def prev_clicked():
-		root_container.children[2] = screens.previous()
-		update_titlebar(root_container, screens)
+		if screens.has_previous():
+			root_container.children[2] = screens.previous()
+			update_titlebar(root_container, screens)
+		else:
+			set_titlebar(root_container, initial_titlebar)
 
 	def next_clicked():
 		root_container.children[2] = screens.next()
@@ -140,7 +150,6 @@ async def main():
 		if 'end-screen' != screens.ordered[screens.current_id].screen_id:
 			layout.focus(root_container.children[2])
 		else:
-
 			# generate_settings() will go here
 
 			navbar.next.text = 'Finish!'
@@ -149,9 +158,17 @@ async def main():
 	navbar.prev.handler = prev_clicked
 	navbar.next.handler = next_clicked
 
-	# TODO: not sure about it
+	# set welcome screen button handlers
+
+	def create_button_handler(button):
+		def button_handler():
+			screens.set_list(None)
+			next_clicked()
+
+		return button_handler
+
 	for button in screens.get('welcome'):
-		button.handler = screens.navbar.next.handler
+		button.handler = create_button_handler(button)
 
 	result = await app.run_async()
 
