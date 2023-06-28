@@ -13,7 +13,7 @@ class ButtonWithOperation(Button):
 
 
 def create(_screens):
-	values=[
+	values = [
 		(ShoestringOperation.SETUP, 'setup'),
 		(ShoestringOperation.UPGRADE, 'upgrade'),
 		(ShoestringOperation.RESET_DATA, 'reset data'),
@@ -23,13 +23,14 @@ def create(_screens):
 
 	max_label = max(len(label) for (_, label) in values)
 	buttons = [
-		ButtonWithOperation(operation, label, width=max_label+3)
+		ButtonWithOperation(operation, label, width=max_label + 3)
 		for (operation, label) in values
 	]
 
 	return Screen(
 		'welcome',
-		Box(Shadow(
+		Box(
+			Shadow(
 				HSplit([
 					Window(
 						FormattedTextControl(_('wizard-welcome-title')),
@@ -41,9 +42,9 @@ def create(_screens):
 						]),
 						style='class:navigation'
 					)
-				],
-				style='class:dialog.body')
-		)),
+				], style='class:dialog.body')
+			)
+		),
 		accessor=buttons,
 		hide_navbar=True
 	)

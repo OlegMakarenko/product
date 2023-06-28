@@ -90,7 +90,7 @@ async def run_shoestring_command(screens):
 			package)
 
 
-async def main():
+async def main():  # pylint: disable=too-many-locals
 	lang = gettext.translation('messages', localedir='lang', languages=('ja', 'en'))  # TODO: how should we detect language?
 	lang.install()
 
@@ -169,6 +169,7 @@ async def main():
 	}
 
 	default_screens = [screen.screen_id for screen in screens.ordered]
+
 	def create_button_handler(button):
 		def button_handler():
 			wanted_screens = button_screens.get(button.operation, default_screens)

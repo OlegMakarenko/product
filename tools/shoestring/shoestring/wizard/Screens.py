@@ -21,8 +21,8 @@ class Screens:
 		index = [screen.screen_id for screen in self.ordered].index(screen_id)
 		return self.ordered[index].accessor
 
-	def set_list(self, list):
-		self.allowed_list = list
+	def set_list(self, allowed_list):
+		self.allowed_list = allowed_list
 
 	@property
 	def current(self):
@@ -43,7 +43,7 @@ class Screens:
 
 		next_id = self.current_id + 1
 		while next_id != len(self.ordered):
-			if self.ordered[next_id].screen_id in self.allowed_list and	self.ordered[next_id].should_show():
+			if self.ordered[next_id].screen_id in self.allowed_list and self.ordered[next_id].should_show():
 				break
 
 			next_id = next_id + 1
