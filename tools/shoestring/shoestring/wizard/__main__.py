@@ -114,7 +114,10 @@ async def main():
 			filter=Condition(lambda: not screens.current.is_valid()),
 		),
 
-		navbar.container
+		ConditionalContainer(
+			navbar.container,
+			filter=Condition(lambda: not screens.current.hide_navbar),
+		),
 	])
 	navbar.next.state_filter = Condition(lambda: not screens.current.is_valid())
 
@@ -123,6 +126,8 @@ async def main():
 	layout = Layout(root_container, focused_element=navbar.next)
 
 	app = Application(layout, key_bindings=key_bindings, style=app_styles, full_screen=True)
+
+	layout.focus(root_container.children[2])
 
 	def prev_clicked():
 		root_container.children[2] = screens.previous()
@@ -143,6 +148,10 @@ async def main():
 
 	navbar.prev.handler = prev_clicked
 	navbar.next.handler = next_clicked
+
+	# TODO: not sure about it
+	for button in screens.get('welcome'):
+		button.handler = screens.navbar.next.handler
 
 	result = await app.run_async()
 
