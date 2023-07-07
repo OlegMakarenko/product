@@ -1,21 +1,21 @@
-import RecentBlocks from '@/components/RecentBlocks';
+import CustomImage from '@/components/CustomImage';
 import Field from '@/components/Field';
-import ValuePrice from '@/components/ValuePrice';
+import LineChart from '@/components/LineChart';
+import RecentBlocks from '@/components/RecentBlocks';
 import RecentTransactions from '@/components/RecentTransactions';
 import Section from '@/components/Section';
 import Separator from '@/components/Separator';
+import ValuePrice from '@/components/ValuePrice';
+import { getBlockPage } from '@/pages/api/blocks';
+import { getStats } from '@/pages/api/stats';
+import { getTransactionPage } from '@/pages/api/transactions';
 import styles from '@/styles/pages/Home.module.scss';
+import { formatDate } from '@/utils';
+import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import Head from 'next/head';
-import LineChart from '@/components/LineChart';
-import { formatDate } from '../utils';
-import { getBlockPage } from './api/blocks';
-import { getStats } from './api/stats';
-import { getTransactionPage } from './api/transactions';
 
-
-export const getStaticProps = async ({ locale }) => {
+export const getServerSideProps = async ({ locale }) => {
 	const blocksPage = await getBlockPage();
 	const latestTransactionsPage = await getTransactionPage({ pageSize: 5 }, 'confirmed');
 	const pendingTransactionsPage = await getTransactionPage({ pageSize: 3 }, 'unconfirmed');
@@ -30,17 +30,16 @@ export const getStaticProps = async ({ locale }) => {
 			baseInfo: stats.baseInfo,
 			chainInfo: stats.chainInfo,
 			charts: stats.charts,
-			...(await serverSideTranslations(locale, ['common', 'home'])),
-		},
-	}
+			...(await serverSideTranslations(locale, ['common']))
+		}
+	};
 };
 
-const Home = ({blocks, fees, latestTransactions, pendingTransactions, baseInfo, chainInfo, charts}) => {
-	const { t } = useTranslation('home');
-	const { t: commonT } = useTranslation('common');
+const Home = ({ blocks, fees, latestTransactions, pendingTransactions, baseInfo, chainInfo, charts }) => {
+	const { t } = useTranslation();
 	const formattedCharts = {
 		...charts,
-		transactions: charts.transactions.map(item => [formatDate(item[0], commonT), item[1]])
+		transactions: charts.transactions.map(item => [formatDate(item[0], t), item[1]])
 	};
 
 	return (
@@ -53,10 +52,8 @@ const Home = ({blocks, fees, latestTransactions, pendingTransactions, baseInfo, 
 				<div className="layout-flex-row">
 					<div className="layout-grid-row layout-flex-fill">
 						<div className="layout-flex-col layout-flex-fill">
-							<Field title={t('field_totalTransactions')}>
-								{baseInfo.totalTransactions}
-							</Field>
-							<Field title={t('field_transactionsPerBlock')}>
+							<Field title={t('field_totalTransactions')}>{baseInfo.totalTransactions}</Field>
+							<Field title={t('field_transactionsPerBlock')} description={t('field_transactionsPerBlock_description')}>
 								{baseInfo.transactionsPerBlock}
 							</Field>
 						</div>
@@ -68,9 +65,7 @@ const Home = ({blocks, fees, latestTransactions, pendingTransactions, baseInfo, 
 							<Field title={t('field_price')}>
 								<ValuePrice value={baseInfo.price} change={baseInfo.priceChange} />
 							</Field>
-							<Field title={t('field_volume')}>
-								${baseInfo.volume}
-							</Field>
+							<Field title={t('field_volume')}>${baseInfo.volume}</Field>
 						</div>
 						<div className="layout-flex-col layout-flex-fill">
 							<Field title={t('field_circulatingSupply')} textAlign="right">
@@ -84,14 +79,10 @@ const Home = ({blocks, fees, latestTransactions, pendingTransactions, baseInfo, 
 					<Separator />
 					<div className="layout-grid-row layout-flex-fill">
 						<div className="layout-flex-col layout-flex-fill">
-							<Field title={t('field_totalNodes')}>
-								{baseInfo.totalNodes}
-							</Field>
-							<Field title={t('field_supernodes')}>
-								{baseInfo.supernodes}
-							</Field>
+							<Field title={t('field_totalNodes')}>{baseInfo.totalNodes}</Field>
+							<Field title={t('field_supernodes')}>{baseInfo.supernodes}</Field>
 						</div>
-						<img src="/images/stub-node-chart.svg" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+						<CustomImage src="/images/stub-node-chart.svg" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
 					</div>
 				</div>
 			</Section>
@@ -99,38 +90,26 @@ const Home = ({blocks, fees, latestTransactions, pendingTransactions, baseInfo, 
 				<Section title={t('section_fees')}>
 					<div className="layout-flex-row">
 						<div className="layout-flex-fill">
-							<Field title={t('field_feeSlow')}>
-								{fees.slow} XEM
-							</Field>
+							<Field title={t('field_feeSlow')}>{fees.slow} XEM</Field>
 						</div>
 						<div className="layout-flex-fill">
-							<Field title={t('field_feeMedium')}>
-								{fees.medium} XEM
-							</Field>
+							<Field title={t('field_feeMedium')}>{fees.medium} XEM</Field>
 						</div>
 						<div className="layout-flex-fill">
-							<Field title={t('field_feeFast')}>
-								{fees.fast} XEM
-							</Field>
+							<Field title={t('field_feeFast')}>{fees.fast} XEM</Field>
 						</div>
 					</div>
 				</Section>
 				<Section title={t('section_chain')}>
 					<div className="layout-flex-row">
 						<div className="layout-flex-fill">
-							<Field title={t('field_height')}>
-								{chainInfo.height}
-							</Field>
+							<Field title={t('field_height')}>{chainInfo.height}</Field>
 						</div>
 						<div className="layout-flex-fill">
-							<Field title={t('field_lastSafeBlock')}>
-								{chainInfo.lastSafeBlock}
-							</Field>
+							<Field title={t('field_lastSafeBlock')}>{chainInfo.lastSafeBlock}</Field>
 						</div>
 						<div className="layout-flex-fill">
-							<Field title={t('field_currentBlockTime')}>
-								{chainInfo.blockGenerationTime}
-							</Field>
+							<Field title={t('field_currentBlockTime')}>{chainInfo.blockGenerationTime}</Field>
 						</div>
 					</div>
 				</Section>
@@ -144,7 +123,7 @@ const Home = ({blocks, fees, latestTransactions, pendingTransactions, baseInfo, 
 				</Section>
 			</div>
 		</div>
-	)
+	);
 };
 
 export default Home;

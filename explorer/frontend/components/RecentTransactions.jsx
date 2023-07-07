@@ -1,12 +1,12 @@
-import styles from '@/styles/components/RecentTransactions.module.scss';
 import IconTransactionType from './IconTransactionType';
+import ValueAge from './ValueAge';
 import ValueMosaic from './ValueMosaic';
 import ValueTimestamp from './ValueTimestamp';
-import { useTranslation } from 'next-i18next';
 import ValueTransactionHash from './ValueTransactionHash';
-import ValueAge from './ValueAge';
+import styles from '@/styles/components/RecentTransactions.module.scss';
+import { useTranslation } from 'next-i18next';
 
-const TransactionPreview = ({ type, group, hash, timestamp, deadline, fee, amount }) => {
+const TransactionPreview = ({ type, group, hash, timestamp, deadline, amount }) => {
 	const { t } = useTranslation();
 	const typeText = t(`transactionType_${type}`);
 	const isUnconfirmed = group === 'unconfirmed';
@@ -17,12 +17,15 @@ const TransactionPreview = ({ type, group, hash, timestamp, deadline, fee, amoun
 			<div className={styles.info}>
 				<div className={styles.type}>{typeText}</div>
 				<ValueTransactionHash value={hash} />
-				{isUnconfirmed && <span>~ <ValueAge value={deadline} /></span>}
+				{isUnconfirmed && (
+					<span>
+						~ <ValueAge value={deadline} />
+					</span>
+				)}
 				{!isUnconfirmed && <ValueTimestamp value={timestamp} />}
 			</div>
 			<div className={styles.amount}>
 				<ValueMosaic isNative amount={amount} />
-				{/* <ValueMosaic isNative amount={fee} /> */}
 			</div>
 		</div>
 	);
@@ -44,7 +47,7 @@ const RecentTransactions = ({ data }) => {
 				/>
 			))}
 		</div>
-	)
-}
+	);
+};
 
 export default RecentTransactions;

@@ -2,23 +2,23 @@ import styles from '@/styles/components/Header.module.scss';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-
-const menuItems = [
-	{
-		text: 'Home',
-		href: '/'
-	},
-	{
-		text: 'Blocks',
-		href: '/blocks'
-	}
-];
+import { useTranslation } from 'next-i18next';
 
 const Header = () => {
 	const router = useRouter();
+	const { t } = useTranslation();
+	const menuItems = [
+		{
+			text: t('menu_home'),
+			href: '/'
+		},
+		{
+			text: t('menu_blocks'),
+			href: '/blocks'
+		}
+	];
 
-	const getItemStyle = (href) =>
-		`${styles.headerMenuItem} ${router.asPath === href && styles.headerMenuItem__active}`;
+	const getItemStyle = href => `${styles.headerMenuItem} ${router.asPath === href && styles.headerMenuItem__active}`;
 
 	return (
 		<div className={styles.headerWrapper}>
@@ -36,6 +36,6 @@ const Header = () => {
 			</header>
 		</div>
 	);
-}
+};
 
 export default Header;
