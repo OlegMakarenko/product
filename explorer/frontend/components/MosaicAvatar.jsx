@@ -1,5 +1,5 @@
 import CustomImage from './CustomImage';
-import styles from '@/styles/components/AccountAvatar.module.scss';
+import styles from '@/styles/components/Avatar.module.scss';
 import hslToRgb from 'hsl-rgb';
 
 const getColorFromHash = hash => {
@@ -29,7 +29,7 @@ const getColorFromHash = hash => {
 	return `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
 };
 
-const AccountAvatar = ({ address, size }) => {
+const Avatar = ({ address, size }) => {
 	let rootStyle;
 
 	switch (size) {
@@ -82,4 +82,4 @@ const AccountAvatar = ({ address, size }) => {
 	);
 };
 
-export default AccountAvatar;
+export default Avatar;

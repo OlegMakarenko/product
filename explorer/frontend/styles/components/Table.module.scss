@@ -37,6 +37,10 @@
             animation-duration: 250ms;
             animation-timing-function: linear;
 
+            &:last-child {
+                border-bottom: none;
+            }
+
             &:hover {
                 background-color: #F3F4F7;
                 transition: background-color 250ms linear;
@@ -44,7 +48,7 @@
         }
     }
 
-    .dataMobile {
+    .listMobile {
         display: none;
 
         .itemMobile {
@@ -63,6 +67,16 @@
         }
     }
 
+    .section {
+        margin-top: $spacing-base * 3;
+    }
+
+    .sectionHeader {
+        display: inline-block;
+        background: #F3F4F7;
+        border-radius: 1rem 1rem 0 0;
+    }
+
 
     @media #{$screen-mobile} {
         .header {
@@ -74,7 +88,36 @@
         }
 
         .dataMobile {
+            display: flex !important;
+            flex-direction: column;
+            gap: $spacing-base;
+            overflow-x: auto;
+            border: none;
+
+            .dataRow {
+                gap: $spacing-base * 2;
+                padding: 0 0 $spacing-base;
+
+                &:last-child {
+                    padding: 0;
+                    border-bottom: none
+                }
+            }
+        }
+
+        .listMobile {
             display: block;
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sectionHeader {
+            align-self: center;
+            margin-bottom: $spacing-base * 2;
+            border-radius: $spacing-base;
         }
     }
 }

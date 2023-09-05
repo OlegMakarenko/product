@@ -1,6 +1,6 @@
+import ChartLine from '@/components/ChartLine';
 import Field from '@/components/Field';
 import ItemBlockMobile from '@/components/ItemBlockMobile';
-import LineChart from '@/components/LineChart';
 import Section from '@/components/Section';
 import Separator from '@/components/Separator';
 import Table from '@/components/Table';
@@ -32,7 +32,7 @@ export const getServerSideProps = async ({ locale }) => {
 
 const Blocks = ({ blocks, chainInfo, charts }) => {
 	const { t } = useTranslation();
-	const [loadBlockPage, blockList, isLoading, pageNumber, isLastPage] = usePagination(fetchBlockPage, blocks);
+	const { requestNextPage, data, isLoading, pageNumber, isLastPage } = usePagination(fetchBlockPage, blocks);
 
 	const tableColumns = [
 		{
@@ -72,39 +72,39 @@ const Blocks = ({ blocks, chainInfo, charts }) => {
 				<title>{t('page_blocks')}</title>
 			</Head>
 			<Section title={t('section_blocks')}>
-				<div className="layout-flex-row">
+				<div className="layout-flex-row-mobile-col">
 					<div className="layout-grid-row layout-flex-fill">
 						<div className="layout-flex-col layout-flex-fill">
 							<Field title={t('field_blockGenerationTime')}>
 								{t('value_blockGenerationTime', { value: chainInfo.blockGenerationTime })}
 							</Field>
 						</div>
-						<LineChart data={charts.blockTime} name={t('chart_series_blockTime')} />
+						<ChartLine data={charts.blockTime} name={t('chart_series_blockTime')} />
 					</div>
 					<Separator className="no-mobile" />
 					<div className="layout-grid-row layout-flex-fill">
 						<div className="layout-flex-col layout-flex-fill">
 							<Field title={t('field_averageFee')}>{t('value_averageFee', { value: chainInfo.averageFee })}</Field>
 						</div>
-						<LineChart data={charts.fee} name={t('chart_series_fee')} />
+						<ChartLine data={charts.fee} name={t('chart_series_fee')} />
 					</div>
 					<Separator className="no-mobile" />
 					<div className="layout-grid-row layout-flex-fill">
 						<div className="layout-flex-col layout-flex-fill">
 							<Field title={t('field_difficulty')}>{chainInfo.difficulty}%</Field>
 						</div>
-						<LineChart data={charts.difficulty} name={t('chart_series_difficulty')} />
+						<ChartLine data={charts.difficulty} name={t('chart_series_difficulty')} />
 					</div>
 				</div>
 			</Section>
 			<Section>
 				<Table
-					data={blockList}
+					data={data}
 					columns={tableColumns}
 					ItemMobile={ItemBlockMobile}
 					isLoading={isLoading}
 					isLastPage={isLastPage}
-					onEndReached={() => loadBlockPage({ pageNumber: pageNumber + 1 })}
+					onEndReached={() => requestNextPage({ pageNumber: pageNumber + 1 })}
 				/>
 			</Section>
 		</div>

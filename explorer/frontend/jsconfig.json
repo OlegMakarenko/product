@@ -4,6 +4,7 @@
         "paths": {
             "@/components/*": ["components/*"],
             "@/config": ["config/index.js"],
+            "@/constants": ["constants/index.js"],
             "@/pages/*": ["pages/*"],
             "@/public/*": ["public/*"],
             "@/styles/*": ["styles/*"],
