@@ -8,6 +8,7 @@
     width: fit-content;
     padding: 0 $spacing-base / 2;
     overflow: hidden;
+    color: unset;
     background: $color-background-mosaic;
     border-radius: $border-radius-chip;
 }
@@ -30,11 +31,11 @@
 }
 
 .incoming {
-    color: $color-primary;
+    color: $color-primary !important;
 }
 
 .outgoing {
-    color: $color-danger;
+    color: $color-danger !important;
 }
 
 .containerMd {
