@@ -69,15 +69,73 @@ export const trunc = (str, type, length = 5) => {
 };
 
 export const getContactsFromStorage = () => {
+	const defaultValue = [];
+
 	try {
 		const jsonString = localStorage.getItem(STORAGE_KEY.ADDRESS_BOOK);
-		return JSON.parse(jsonString) || [];
+		return JSON.parse(jsonString) || defaultValue;
 	} catch {
-		return [];
+		return defaultValue;
 	}
 };
 
 export const setContactsToStorage = value => {
 	localStorage.setItem(STORAGE_KEY.ADDRESS_BOOK, JSON.stringify(value));
 	dispatchEvent(new Event(EVENT.ADDRESS_BOOK_UPDATE));
+};
+
+export const getTimestampTypeFromStorage = () => {
+	const defaultValue = 'UTC';
+
+	try {
+		const value = localStorage.getItem(STORAGE_KEY.STORAGE_KEY);
+		return value || defaultValue;
+	} catch {
+		return defaultValue;
+	}
+};
+
+export const setTimestampTypeToStorage = value => {
+	localStorage.setItem(STORAGE_KEY.STORAGE_KEY, value);
+	dispatchEvent(new Event(EVENT.TIMESTAMP_TYPE_UPDATE));
+};
+
+export const nullableValueToText = value => {
+	return value === null || value === undefined ? '-' : value;
+};
+
+export const arrayToText = value => {
+	return value.length === 0 ? '-' : value.join(', ');
+};
+
+export const createPageHref = (pageName, parameter) => {
+	let href;
+
+	switch (pageName) {
+		default:
+		case 'home':
+			href = '/';
+			break;
+		case 'accounts':
+			href = '/accounts';
+			break;
+		case 'blocks':
+			href = '/blocks';
+			break;
+		case 'mosaics':
+			href = '/mosaics';
+			break;
+		case 'namespaces':
+			href = '/namespaces';
+			break;
+		case 'transactions':
+			href = '/transactions';
+			break;
+	}
+
+	if (parameter !== undefined && parameter !== null) {
+		href += `/${parameter}`;
+	}
+
+	return href;
 };

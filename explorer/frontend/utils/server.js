@@ -19,4 +19,35 @@ export const createSearchCriteria = (searchCriteria = {}) => {
 	};
 };
 
-export const createPage = (data, pageNumber) => ({ data, pageNumber });
+export const createPage = (data, pageNumber, formatter) => ({
+	data: formatter ? data.map(formatter) : data,
+	pageNumber
+});
+
+export const createAPISearchURL = (baseURL, searchCriteria, filter = {}) => {
+	const limit = searchCriteria.pageSize;
+	const offset = searchCriteria.pageSize * (searchCriteria.pageNumber - 1);
+	const params = new URLSearchParams({
+		limit,
+		offset,
+		...filter
+	}).toString();
+
+	return `${baseURL}?${params}`;
+};
+
+export const createAPICallFunction =
+	func =>
+	async (...args) => {
+		try {
+			const data = await func(...args);
+
+			if (data.status) {
+				return null;
+			}
+
+			return data;
+		} catch {
+			return null;
+		}
+	};

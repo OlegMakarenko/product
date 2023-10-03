@@ -1,10 +1,12 @@
 import ChartLine from '@/components/ChartLine';
 import Field from '@/components/Field';
+import FieldTimestamp from '@/components/FieldTimestamp';
 import ItemBlockMobile from '@/components/ItemBlockMobile';
 import Section from '@/components/Section';
 import Separator from '@/components/Separator';
 import Table from '@/components/Table';
 import ValueAccount from '@/components/ValueAccount';
+import ValueBlockHeight from '@/components/ValueBlockHeight';
 import ValueMosaic from '@/components/ValueMosaic';
 import ValueTimestamp from '@/components/ValueTimestamp';
 import { fetchBlockPage, getBlockPage } from '@/pages/api/blocks';
@@ -12,7 +14,6 @@ import { getStats } from '@/pages/api/stats';
 import styles from '@/styles/pages/Home.module.scss';
 import { usePagination } from '@/utils';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
@@ -38,7 +39,7 @@ const Blocks = ({ blocks, chainInfo, charts }) => {
 		{
 			key: 'height',
 			size: '8rem',
-			renderValue: value => <Link href={`/blocks/${value}`}>{value}</Link>
+			renderValue: value => <ValueBlockHeight value={value} />
 		},
 		{
 			key: 'harvester',
@@ -52,16 +53,12 @@ const Blocks = ({ blocks, chainInfo, charts }) => {
 		{
 			key: 'totalFee',
 			size: '7rem',
-			renderValue: value => <ValueMosaic amount={value} isNative hasTime />
-		},
-		{
-			key: 'reward',
-			size: '7rem',
-			renderValue: value => <ValueMosaic amount={value} isNative hasTime />
+			renderValue: value => <ValueMosaic amount={value} isNative />
 		},
 		{
 			key: 'timestamp',
 			size: '11rem',
+			renderTitle: () => <FieldTimestamp />,
 			renderValue: value => <ValueTimestamp value={value} hasTime />
 		}
 	];
@@ -101,7 +98,7 @@ const Blocks = ({ blocks, chainInfo, charts }) => {
 				<Table
 					data={data}
 					columns={tableColumns}
-					ItemMobile={ItemBlockMobile}
+					renderItemMobile={data => <ItemBlockMobile data={data} />}
 					isLoading={isLoading}
 					isLastPage={isLastPage}
 					onEndReached={() => requestNextPage({ pageNumber: pageNumber + 1 })}

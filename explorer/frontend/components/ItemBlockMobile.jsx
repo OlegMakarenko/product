@@ -3,6 +3,7 @@ import ValueAccount from './ValueAccount';
 import ValueMosaic from './ValueMosaic';
 import ValueTimestamp from './ValueTimestamp';
 import styles from '@/styles/components/ItemBlockMobile.module.scss';
+import { createPageHref } from '@/utils';
 import Link from 'next/link';
 
 const ItemBlockMobile = ({ data }) => {
@@ -11,7 +12,7 @@ const ItemBlockMobile = ({ data }) => {
 	return (
 		<div className={styles.itemBlockMobile}>
 			<div className={styles.middle}>
-				<Link href={`/blocks/${height}`} className={styles.height}>
+				<Link href={createPageHref('blocks', height)} className={styles.height}>
 					{height}
 				</Link>
 				<div className={styles.row}>

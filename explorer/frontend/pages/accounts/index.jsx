@@ -3,7 +3,7 @@ import ButtonCSV from '@/components/ButtonCSV';
 import ChartDonut from '@/components/ChartDonut';
 import Field from '@/components/Field';
 import Filter from '@/components/Filter';
-import ItemBlockMobile from '@/components/ItemBlockMobile';
+import ItemAccountMobile from '@/components/ItemAccountMobile';
 import Section from '@/components/Section';
 import Separator from '@/components/Separator';
 import Table from '@/components/Table';
@@ -106,7 +106,7 @@ const Accounts = ({ preloadedData, stats }) => {
 					<Table
 						data={data}
 						columns={tableColumns}
-						ItemMobile={ItemBlockMobile}
+						renderItemMobile={data => <ItemAccountMobile data={data} />}
 						isLoading={isLoading}
 						isLastPage={isLastPage}
 						onEndReached={requestNextPage}

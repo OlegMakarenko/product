@@ -51,7 +51,7 @@ const AccountAvatar = ({ address }) => {
 		};
 	};
 
-	const image = address ? getImage() : { src: '/images/icon-question.png' };
+	const image = address?.length > 2 ? getImage() : { src: '/images/icon-question.png' };
 
 	return <CustomImage src={image.src} className={styles.image} style={image.style} />;
 };
@@ -66,20 +66,32 @@ const MosaicAvatar = ({ mosaicId }) => {
 	return <CustomImage src={imageSrc} className={styles.image} />;
 };
 
+const NamespaceAvatar = () => {
+	return <CustomImage src={'/images/namespaces/namespace.svg'} className={styles.image} />;
+};
+
+const BlockAvatar = () => {
+	return <CustomImage src={'/images/blocks/block.svg'} className={styles.image} />;
+};
+
 const TransactionAvatar = ({ type }) => {
 	return (
 		<div className={styles.imageDefault}>
-			<IconTransactionType value={type} />
+			<IconTransactionType value={type} className={styles.imageTransactionType} />
 		</div>
 	);
 };
 
-const Avatar = ({ size, type, value }) => {
+const Avatar = ({ size, type, value, dot }) => {
 	const sizeStyleMap = {
 		sm: styles.containerSm,
 		md: styles.containerMd,
 		lg: styles.containerLg,
 		xl: styles.containerXl
+	};
+	const dotStyleMap = {
+		red: styles.dotRed,
+		green: styles.dotGreen
 	};
 
 	const ChildComponent =
@@ -89,9 +101,18 @@ const Avatar = ({ size, type, value }) => {
 			<MosaicAvatar mosaicId={value} />
 		) : type === 'transaction' ? (
 			<TransactionAvatar type={value} />
+		) : type === 'block' ? (
+			<BlockAvatar />
+		) : type === 'namespace' ? (
+			<NamespaceAvatar namespaceId={value} />
 		) : null;
 
-	return <div className={`${styles.container} ${sizeStyleMap[size]}`}>{ChildComponent}</div>;
+	return (
+		<div className={`${styles.container} ${sizeStyleMap[size]}`}>
+			{ChildComponent}
+			{!!dot && <div className={dotStyleMap[dot]} />}
+		</div>
+	);
 };
 
 export default Avatar;

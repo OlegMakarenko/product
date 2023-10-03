@@ -2,8 +2,6 @@ import { search } from '../api/search';
 import { fetchTransactionChart, getStats } from '../api/stats';
 import ButtonCSV from '@/components/ButtonCSV';
 import ChartColumns from '@/components/ChartColumns';
-import ChartDonut from '@/components/ChartDonut';
-import CustomImage from '@/components/CustomImage';
 import Field from '@/components/Field';
 import Filter from '@/components/Filter';
 import ItemTransactionMobile from '@/components/ItemTransactionMobile';
@@ -12,15 +10,11 @@ import SectionHeaderTransaction from '@/components/SectionHeaderTransaction';
 import Separator from '@/components/Separator';
 import Table from '@/components/Table';
 import ValueAccount from '@/components/ValueAccount';
-import ValueCopy from '@/components/ValueCopy';
-import ValueLabel from '@/components/ValueLabel';
+import ValueList from '@/components/ValueList';
 import ValueMosaic from '@/components/ValueMosaic';
-import ValueTimestamp from '@/components/ValueTimestamp';
 import ValueTransactionHash from '@/components/ValueTransactionHash';
-import ValueTransactionSquares from '@/components/ValueTransactionSquares';
 import ValueTransactionType from '@/components/ValueTransactionType';
 import { TRANSACTION_TYPE } from '@/constants';
-import { fetchTransactionPage, getTransactionInfo } from '@/pages/api/transactions';
 import { getTransactionPage } from '@/pages/api/transactions';
 import styles from '@/styles/pages/TransactionList.module.scss';
 import { formatDate, useFilter, usePagination } from '@/utils';
@@ -43,14 +37,14 @@ export const getServerSideProps = async ({ locale }) => {
 
 const TransactionInfo = ({ preloadedData, stats }) => {
 	const { t } = useTranslation();
-	const { requestNextPage, data, isLoading, isLastPage, filter, changeFilter } = usePagination(fetchTransactionPage, preloadedData);
+	const { requestNextPage, data, isLoading, isLastPage, filter, changeFilter } = usePagination(getTransactionPage, preloadedData);
 	const chart = useFilter(fetchTransactionChart, [], true);
 	const formattedChartData = chart.data.map(item => {
 		if (chart.filter.isPerDay) {
 			return [formatDate(item[0], t), item[1]];
 		}
 		if (chart.filter.isPerMonth) {
-			return [formatDate(item[0], t, false, false, false), item[1]];
+			return [formatDate(item[0], t, { hasDays: false }), item[1]];
 		}
 		return [t('chart_label_block', { height: item[0] }), item[1]];
 	});
@@ -63,11 +57,11 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 		},
 		{
 			key: 'type',
-			size: '9rem',
+			size: '10rem',
 			renderValue: value => <ValueTransactionType value={value} />
 		},
 		{
-			key: 'signer',
+			key: 'sender',
 			size: '20rem',
 			renderValue: value => <ValueAccount address={value} size="md" />
 		},
@@ -77,9 +71,16 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 			renderValue: value => <ValueAccount address={value} size="md" />
 		},
 		{
-			key: 'amount',
-			size: '10rem',
-			renderValue: value => <ValueMosaic amount={value} isNative hasTime />
+			key: 'value',
+			size: '20rem',
+			renderValue: value => (
+				<ValueList
+					data={value}
+					max={2}
+					direction="column"
+					renderItem={item => <ValueMosaic mosaicId={item.id} mosaicName={item.name} amount={item.amount} isTickerShown />}
+				/>
+			)
 		},
 		{
 			key: 'fee',
@@ -199,7 +200,7 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 					<Table
 						sections={transactionsGrouped}
 						columns={tableColumns}
-						ItemMobile={ItemTransactionMobile}
+						renderItemMobile={data => <ItemTransactionMobile data={data} />}
 						isLoading={isLoading}
 						isLastPage={isLastPage}
 						onEndReached={requestNextPage}

@@ -1,7 +1,8 @@
+import { STORAGE_KEY } from '@/constants';
 import { useEffect, useState } from 'react';
 
-export const useDataManager = (callback, defaultData, onError) => {
-	const [isLoading, setIsLoading] = useState(false);
+export const useDataManager = (callback, defaultData, onError, loadingState = false) => {
+	const [isLoading, setIsLoading] = useState(loadingState);
 	const [data, setData] = useState(defaultData);
 
 	const call = (...args) => {
@@ -23,8 +24,8 @@ export const useDataManager = (callback, defaultData, onError) => {
 	return [call, isLoading, data];
 };
 
-export const usePagination = (callback, defaultData) => {
-	const [filter, setFilter] = useState({});
+export const usePagination = (callback, defaultData, defaultFilter = {}) => {
+	const [filter, setFilter] = useState(defaultFilter);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLastPage, setIsLastPage] = useState(false);
 	const [pageNumber, setPageNumber] = useState(1);
@@ -34,7 +35,7 @@ export const usePagination = (callback, defaultData) => {
 		setIsLoading(true);
 		setTimeout(async () => {
 			try {
-				const { data, pageNumber: currentPageNumber } = await callback({ pageNumber: pageNumber, ...filter });
+				const { data, pageNumber: currentPageNumber } = await callback({ pageNumber: pageNumber }, { ...filter });
 
 				if (currentPageNumber === pageNumber) {
 					setData(v => [...v, ...data]);
@@ -129,4 +130,140 @@ export const useToggle = initialValue => {
 	const toggle = () => setValue(value => !value);
 
 	return [value, toggle];
+};
+
+export const useStorage = (key, defaultValue, callback) => {
+	const [value, setValue] = useState(defaultValue);
+	const [setter, setSetter] = useState(null);
+	const getEvent = key => `storage.update.${key}`;
+	const storage = {
+		[STORAGE_KEY.ADDRESS_BOOK]: {
+			get: () => {
+				const defaultValue = [];
+
+				try {
+					const jsonString = localStorage.getItem(STORAGE_KEY.ADDRESS_BOOK);
+					return JSON.parse(jsonString) || defaultValue;
+				} catch {
+					return defaultValue;
+				}
+			},
+			set: value => {
+				localStorage.setItem(STORAGE_KEY.ADDRESS_BOOK, JSON.stringify(value));
+				dispatchEvent(new Event(getEvent(STORAGE_KEY.ADDRESS_BOOK)));
+			}
+		},
+		[STORAGE_KEY.TIMESTAMP_TYPE]: {
+			get: () => {
+				const defaultValue = 'UTC';
+
+				try {
+					const value = localStorage.getItem(STORAGE_KEY.TIMESTAMP_TYPE);
+					return value || defaultValue;
+				} catch {
+					return defaultValue;
+				}
+			},
+			set: value => {
+				localStorage.setItem(STORAGE_KEY.TIMESTAMP_TYPE, value);
+				dispatchEvent(new Event(getEvent(STORAGE_KEY.TIMESTAMP_TYPE)));
+			}
+		},
+		[STORAGE_KEY.USER_CURRENCY]: {
+			get: () => {
+				const defaultValue = 'usd';
+
+				try {
+					const value = localStorage.getItem(STORAGE_KEY.USER_CURRENCY);
+					return value || defaultValue;
+				} catch {
+					return defaultValue;
+				}
+			},
+			set: value => {
+				localStorage.setItem(STORAGE_KEY.USER_CURRENCY, value);
+				dispatchEvent(new Event(getEvent(STORAGE_KEY.USER_CURRENCY)));
+			}
+		},
+		[STORAGE_KEY.USER_LANGUAGE]: {
+			get: () => {
+				const defaultValue = 'en';
+
+				try {
+					const value = localStorage.getItem(STORAGE_KEY.USER_LANGUAGE);
+					return value || defaultValue;
+				} catch {
+					return defaultValue;
+				}
+			},
+			set: value => {
+				localStorage.setItem(STORAGE_KEY.USER_LANGUAGE, value);
+				dispatchEvent(new Event(getEvent(STORAGE_KEY.USER_LANGUAGE)));
+			}
+		}
+	};
+
+	useEffect(() => {
+		const accessor = storage[key];
+
+		if (!accessor) {
+			throw Error(`Failed to access store. Unknown key "${key}"`);
+		}
+
+		const updateValue = () => {
+			const value = accessor.get();
+			setValue(value);
+			if (callback) {
+				callback(value);
+			}
+		};
+
+		setSetter(() => accessor.set);
+		updateValue();
+		window?.addEventListener(getEvent(key), updateValue);
+
+		return () => {
+			window?.removeEventListener(getEvent(key), updateValue);
+		};
+	}, []);
+
+	return [value, setter];
+};
+
+export const useUserCurrencyAmount = (fetchPrice, amount, currency, timestamp) => {
+	const [amountInUserCurrency, setAmountInUserCurrency] = useState(null);
+
+	useEffect(() => {
+		const fetchUserCurrencyAmount = async () => {
+			const price = await fetchPrice(timestamp, currency);
+
+			setAmountInUserCurrency(amount * price);
+		};
+
+		if (amount) {
+			fetchUserCurrencyAmount();
+		}
+	}, [fetchPrice, amount, currency, timestamp]);
+
+	return amountInUserCurrency;
+};
+
+export const useAsyncCallOnMount = (callback, defaultData, onError) => {
+	const [data, setData] = useState(defaultData);
+
+	useEffect(() => {
+		const call = async () => {
+			try {
+				const data = await callback();
+				setData(data);
+			} catch (e) {
+				if (onError) {
+					onError(e);
+				}
+			}
+		};
+		call();
+	}, [callback]);
+
+	return data;
 };

@@ -1,14 +1,17 @@
 import { getAccountInfo } from '../api/accounts';
 import { search } from '../api/search';
+import { getPriceByDate } from '../api/stats';
 import Avatar from '@/components/Avatar';
 import ButtonCSV from '@/components/ButtonCSV';
 import Field from '@/components/Field';
+import FieldTimestamp from '@/components/FieldTimestamp';
 import Filter from '@/components/Filter';
 import ItemTransactionMobile from '@/components/ItemTransactionMobile';
 import Section from '@/components/Section';
 import Table from '@/components/Table';
 import ValueAccount from '@/components/ValueAccount';
 import ValueAccountBalance from '@/components/ValueAccountBalance';
+import ValueBlockHeight from '@/components/ValueBlockHeight';
 import ValueCopy from '@/components/ValueCopy';
 import ValueLabel from '@/components/ValueLabel';
 import ValueMosaic from '@/components/ValueMosaic';
@@ -16,10 +19,10 @@ import ValueTimestamp from '@/components/ValueTimestamp';
 import ValueTransactionDirection from '@/components/ValueTransactionDirection';
 import ValueTransactionHash from '@/components/ValueTransactionHash';
 import ValueTransactionType from '@/components/ValueTransactionType';
-import { TRANSACTION_TYPE } from '@/constants';
+import { STORAGE_KEY, TRANSACTION_TYPE } from '@/constants';
 import { fetchTransactionPage, getTransactionPage } from '@/pages/api/transactions';
 import styles from '@/styles/pages/AccountInfo.module.scss';
-import { useClientSideFilter, usePagination } from '@/utils';
+import { arrayToText, useClientSideFilter, usePagination, useStorage, useUserCurrencyAmount } from '@/utils';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -45,6 +48,8 @@ export const getServerSideProps = async ({ locale, params }) => {
 
 const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 	const { address } = accountInfo;
+	const [userCurrency] = useStorage(STORAGE_KEY.USER_CURRENCY, 'usd');
+	const balanceInUserCurrency = useUserCurrencyAmount(getPriceByDate, accountInfo.balance, userCurrency, Date.now());
 	const { t } = useTranslation();
 	const transactionPagination = usePagination(fetchTransactionPage, preloadedTransactions);
 	const mosaics = useClientSideFilter(accountInfo.mosaics);
@@ -96,6 +101,7 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 		{
 			key: 'timestamp',
 			size: '10rem',
+			renderTitle: () => <FieldTimestamp />,
 			renderValue: value => <ValueTimestamp value={value} hasTime />
 		}
 	];
@@ -134,7 +140,7 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 	return (
 		<div className={styles.wrapper}>
 			<Head>
-				<title>{t('page_accountInfo')}</title>
+				<title>{t('page_accountInfo', { address: accountInfo.address })}</title>
 			</Head>
 			<div className="layout-section-row">
 				<Section title={t('section_account')} className={styles.firstSection} cardClassName={styles.firstSectionCard}>
@@ -147,7 +153,11 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 							</div>
 						</div>
 						<Field title={t('field_balance')}>
-							<ValueAccountBalance value={accountInfo.balance} valueUSD={accountInfo.balanceUSD}></ValueAccountBalance>
+							<ValueAccountBalance
+								value={accountInfo.balance}
+								valueInUserCurrency={balanceInUserCurrency}
+								userCurrency={userCurrency}
+							/>
 						</Field>
 						<Field title={t('field_address')}>
 							<ValueCopy value={accountInfo.address} />
@@ -158,13 +168,13 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 				<Section className="layout-align-end" cardClassName={styles.secondSectionCard}>
 					<div className="layout-flex-col-fields">
 						<Field title={t('field_account_names')} description={t('field_account_names_description')}>
-							{accountInfo.names.join(', ')}
+							{arrayToText(accountInfo.names)}
 						</Field>
 						<Field title={t('field_publicKey')} description={t('field_publicKey_description')}>
 							<ValueCopy value={accountInfo.publicKey} />
 						</Field>
 						<Field title={t('field_height')} description={t('field_account_height_description')}>
-							{accountInfo.height}
+							<ValueBlockHeight value={accountInfo.height} />
 						</Field>
 						<Field title={t('field_importance')} description={t('field_importance_description')}>
 							{accountInfo.importance} %
@@ -203,7 +213,7 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 					<Table
 						data={transactionPagination.data}
 						columns={transactionTableColumns}
-						ItemMobile={ItemTransactionMobile}
+						renderItemMobile={data => <ItemTransactionMobile data={data} />}
 						isLoading={transactionPagination.isLoading}
 						isLastPage={transactionPagination.isLastPage}
 						onEndReached={transactionPagination.requestNextPage}

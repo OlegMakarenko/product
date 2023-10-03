@@ -1,18 +1,19 @@
 @import "../variables";
 
 .container {
+    position: relative;
     overflow: hidden;
     border-radius: 50%;
 }
 
 .containerSm {
-    width: 2rem;
-    height: 2rem;
+    width: $spacing-base * 3;
+    height: $spacing-base * 3;
 }
 
 .containerMd {
-    width: 2.67rem;
-    height: 2.67rem;
+    width: $spacing-base * 4;
+    height: $spacing-base * 4;
 }
 
 .containerLg {
@@ -30,6 +31,11 @@
     height: 100%;
 }
 
+.imageTransactionType {
+    width: 30%;
+    height: 30%;
+}
+
 .imageDefault {
     display: flex;
     align-items: center;
@@ -38,4 +44,26 @@
     height: 100%;
     background-color: #fff;
     filter: invert(1);
+}
+
+%dot {
+    position: absolute;
+    right: 8%;
+    bottom: 8%;
+    width: $spacing-base;
+    height: $spacing-base;
+    border: $spacing-base / 4 solid $color-background-card;
+    border-radius: 50%;
+}
+
+.dotGreen {
+    @extend %dot;
+
+    background-color: $color-success;
+}
+
+.dotRed {
+    @extend %dot;
+
+    background-color: $color-danger;
 }

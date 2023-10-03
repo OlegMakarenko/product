@@ -1,21 +1,27 @@
-import Card from './Card';
 import CustomImage from './CustomImage';
+import { Dropdown } from './Dropdown';
 import Field from './Field';
+import Modal from './Modal';
+import SearchBar from './SearchBar';
 import TextBox from './TextBox';
 import ValueAccount from './ValueAccount';
+import { STORAGE_KEY } from '@/constants';
+import { search } from '@/pages/api/search';
 import styles from '@/styles/components/Header.module.scss';
-import { getContactsFromStorage, setContactsToStorage, useToggle } from '@/utils';
+import { createPageHref, useStorage, useToggle } from '@/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const Header = () => {
 	const router = useRouter();
 	const { t } = useTranslation();
-	const [contacts, setContacts] = useState([]);
+	const [contacts, setContacts] = useStorage(STORAGE_KEY.ADDRESS_BOOK, []);
+	const [userLanguage, setUserLanguage] = useStorage(STORAGE_KEY.USER_LANGUAGE, 'en');
+	const [userCurrency, setUserCurrency] = useStorage(STORAGE_KEY.USER_CURRENCY, 'usd');
 	const [address, setAddress] = useState('');
 	const [name, setName] = useState('');
 	const [isProfileOpen, toggleProfile] = useToggle(false);
@@ -24,19 +30,59 @@ const Header = () => {
 	const menuItems = [
 		{
 			text: t('menu_home'),
-			href: '/'
+			href: createPageHref('home')
 		},
 		{
 			text: t('menu_blocks'),
-			href: '/blocks'
+			href: createPageHref('blocks')
 		},
 		{
-			text: t('accounts'),
-			href: '/accounts'
+			text: t('menu_accounts'),
+			href: createPageHref('accounts')
 		},
 		{
-			text: t('transactions'),
-			href: '/transactions'
+			text: t('menu_transactions'),
+			href: createPageHref('transactions')
+		},
+		{
+			text: t('menu_mosaics'),
+			href: createPageHref('mosaics')
+		},
+		{
+			text: t('menu_namespaces'),
+			href: createPageHref('namespaces')
+		}
+	];
+	const languages = [
+		{
+			value: 'en',
+			label: 'English'
+		},
+		{
+			value: 'uk',
+			label: 'Українська'
+		}
+	];
+	const currencies = [
+		{
+			value: 'USD',
+			label: 'USD'
+		},
+		{
+			value: 'EUR',
+			label: 'EUR'
+		},
+		{
+			value: 'UAH',
+			label: 'UAH'
+		},
+		{
+			value: 'GBP',
+			label: 'GBP'
+		},
+		{
+			value: 'JPY',
+			label: 'JPY'
 		}
 	];
 
@@ -52,8 +98,7 @@ const Header = () => {
 	const getItemStyle = href => `${styles.menuItem} ${router.asPath === href && styles.menuItem__active}`;
 	const removeContact = contact => {
 		const updatedContacts = contacts.filter(item => item.address !== contact.address);
-		setContactsToStorage(updatedContacts);
-		setContacts(getContactsFromStorage());
+		setContacts(updatedContacts);
 	};
 	const addAddress = () => {
 		if (address.length < 40) {
@@ -72,10 +117,9 @@ const Header = () => {
 			return toast.error('Address with such Name already added');
 		}
 
-		setContactsToStorage([...contacts, { address, name }]);
+		setContacts([...contacts, { address, name }]);
 		setAddress('');
 		setName('');
-		setContacts(getContactsFromStorage());
 		toggleAddContact();
 	};
 	const dismissNewContact = () => {
@@ -83,10 +127,11 @@ const Header = () => {
 		setName('');
 		toggleAddContact();
 	};
-
-	useEffect(() => {
-		setContacts(getContactsFromStorage());
-	}, []);
+	const selectLanguage = locale => {
+		setUserLanguage(locale);
+		router.push(createPageHref('home'), null, { locale });
+		toggleProfile();
+	};
 
 	return (
 		<div className={styles.headerWrapper}>
@@ -94,70 +139,76 @@ const Header = () => {
 				<div className={styles.headerLogo}>
 					<Image src="/images/logo-nem.png" fill alt="NEM" />
 				</div>
+
 				<div className={styles.headerRightSection}>
 					<div className={styles.headerMenu}>{renderMenu()}</div>
+					<SearchBar className={styles.searchBar} modalClassName={styles.modal} onSearchRequest={search} />
 					<CustomImage className={styles.profileIcon} src="/images/icon-profile.svg" alt="profile" onClick={toggleProfile} />
 					<CustomImage className={styles.menuIcon} src="/images/icon-menu.svg" alt="profile" onClick={toggleMenu} />
 				</div>
-				{isProfileOpen && (
-					<div className={styles.overlay} onClick={toggleProfile}>
-						<Card className={styles.modal} onClick={e => e.stopPropagation()}>
+				<Modal className={`${styles.modal} ${styles.modalProfile}`} isVisible={isProfileOpen} onClose={toggleProfile}>
+					{!isAddContactOpen && (
+						<div className="layout-flex-col">
 							<div>
-								<h3>Address Book</h3>
+								<h4>Language</h4>
+								<Dropdown options={languages} value={userLanguage} onChange={selectLanguage} />
+							</div>
+							<div>
+								<h4>Currency</h4>
+								<Dropdown options={currencies} value={userCurrency} onChange={setUserCurrency} />
+							</div>
+							<div>
+								<h4>Address Book</h4>
 								Give accounts names to easily identify them through the explorer.
 							</div>
-							{!isAddContactOpen && (
-								<div className={styles.contactList}>
-									{contacts.map((item, index) => (
-										<div className={styles.profileAddress} key={index}>
-											<Field title={item.name}>
-												<div className="layout-flex-row">
-													<ValueAccount address={item.address} raw size="sm" />
-													<CustomImage
-														src="/images/icon-delete.png"
-														className={styles.buttonRemove}
-														alt="Remove"
-														onClick={() => removeContact(item)}
-													/>
-												</div>
-											</Field>
-										</div>
-									))}
-								</div>
-							)}
-							{!isAddContactOpen && (
-								<div className={styles.buttonAddContainer} onClick={toggleAddContact}>
-									<CustomImage src="/images/icon-account-add.png" className={styles.buttonAddIcon} alt="Add" />
-								</div>
-							)}
-							{isAddContactOpen && (
-								<div className="layout-flex-col-fields">
-									<Field title="Address">
-										<TextBox value={address} onChange={setAddress} />
-									</Field>
-									<Field title="Name">
-										<TextBox value={name} onChange={setName} />
-									</Field>
-									<div className="layout-flex-row">
-										<div className={styles.button} onClick={addAddress}>
-											Add
-										</div>
-										<div className={styles.button} onClick={dismissNewContact}>
-											Cancel
-										</div>
+							<div className={styles.contactList}>
+								{contacts.map((item, index) => (
+									<div className={styles.profileAddress} key={index}>
+										<Field title={item.name}>
+											<div className="layout-flex-row">
+												<ValueAccount address={item.address} raw size="md" />
+												<CustomImage
+													src="/images/icon-delete.png"
+													className={styles.buttonRemove}
+													alt="Remove"
+													onClick={() => removeContact(item)}
+												/>
+											</div>
+										</Field>
 									</div>
+								))}
+							</div>
+						</div>
+					)}
+					{!isAddContactOpen && (
+						<div className={styles.buttonAddContainer} onClick={toggleAddContact}>
+							<CustomImage src="/images/icon-account-add.png" className={styles.buttonAddIcon} alt="Add" />
+						</div>
+					)}
+					{isAddContactOpen && (
+						<div className="layout-flex-col-fields">
+							<Field title="Address">
+								<TextBox value={address} onChange={setAddress} />
+							</Field>
+							<Field title="Name">
+								<TextBox value={name} onChange={setName} />
+							</Field>
+							<div className="layout-flex-row">
+								<div className={styles.button} onClick={addAddress}>
+									Add
 								</div>
-							)}
-						</Card>
+								<div className={styles.button} onClick={dismissNewContact}>
+									Cancel
+								</div>
+							</div>
+						</div>
+					)}
+				</Modal>
+				<Modal className={styles.modal} isVisible={isMenuOpen} onClose={toggleMenu}>
+					<div className={styles.mobileMenu} onClick={toggleMenu}>
+						{renderMenu()}
 					</div>
-				)}
-				{isMenuOpen && (
-					<div className={styles.overlay} onClick={toggleMenu}>
-						<Card className={styles.modal}>
-							<div>{renderMenu()}</div>
-						</Card>
-					</div>
-				)}
+				</Modal>
 			</header>
 		</div>
 	);

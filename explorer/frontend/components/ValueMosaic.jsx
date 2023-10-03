@@ -3,11 +3,26 @@ import CustomImage from './CustomImage';
 import config from '@/config';
 import { ACCOUNT_STATE_CHANGE_ACTION, TRANSACTION_DIRECTION } from '@/constants';
 import styles from '@/styles/components/ValueMosaic.module.scss';
+import { createPageHref } from '@/utils';
 import Link from 'next/link';
 
-const ValueMosaic = ({ mosaicName, mosaicId, amount, isNative, className, direction, size, onClick }) => {
+const ValueMosaic = ({
+	mosaicName,
+	mosaicId,
+	amount,
+	isNative,
+	className,
+	direction,
+	size,
+	onClick,
+	isNavigationDisabled,
+	isTickerShown,
+	chainHeight,
+	expirationHeight
+}) => {
 	let displayedName;
 	let imageSrc;
+	let title;
 	const directionStyleMap = {
 		[TRANSACTION_DIRECTION.INCOMING]: styles.incoming,
 		[ACCOUNT_STATE_CHANGE_ACTION.RECEIVE]: styles.incoming,
@@ -19,32 +34,45 @@ const ValueMosaic = ({ mosaicName, mosaicId, amount, isNative, className, direct
 	const [integer, decimal] = isAmountExist ? amount.toString().split('.') : ['-'];
 	const finalMosaicId = isNative ? config.NATIVE_MOSAIC_ID : mosaicId;
 
+	const dot = !chainHeight ? null : chainHeight < expirationHeight ? 'green' : 'red';
+
 	if (finalMosaicId === config.NATIVE_MOSAIC_ID) {
-		displayedName = '';
+		displayedName = isTickerShown ? config.NATIVE_MOSAIC_TICKER : '';
 		imageSrc = '/images/icon-mosaic-native.svg';
+		title = amount ? `${amount} ${config.NATIVE_MOSAIC_TICKER}` : '';
 	} else {
 		displayedName = mosaicName;
 		imageSrc = '/images/icon-mosaic-custom.svg';
+		title = amount ? `${amount} ${mosaicName}` : '';
 	}
 
 	const handleClick = e => {
+		e.stopPropagation();
 		if (!onClick) return;
-		e.preventDefault();
+		if (isNavigationDisabled) e.preventDefault();
 		onClick(finalMosaicId);
 	};
 
 	return size === 'md' ? (
-		<div className={`${styles.valueMosaic} ${styles.containerMd} ${className}`} onClick={handleClick}>
-			<Avatar type="mosaic" size="md" value={finalMosaicId} />
+		<Link
+			className={`${styles.valueMosaic} ${styles.containerMd} ${className}`}
+			href={createPageHref('mosaics', finalMosaicId)}
+			title={title}
+			onClick={handleClick}
+		>
+			<Avatar type="mosaic" size="md" value={finalMosaicId} dot={dot} />
 			<div className={styles.valueMosaicMdTextSection}>
-				<Link href={`/mosaics/${finalMosaicId}`} onClick={handleClick}>
-					{mosaicName}
-				</Link>
+				<div>{mosaicName}</div>
 				{isAmountExist && <div>{amount}</div>}
 			</div>
-		</div>
+		</Link>
 	) : (
-		<Link href={`/mosaics/${finalMosaicId}`} className={`${styles.valueMosaic} ${directionStyle} ${className}`} onClick={handleClick}>
+		<Link
+			href={createPageHref('mosaics', finalMosaicId)}
+			className={`${styles.valueMosaic} ${directionStyle} ${className}`}
+			title={title}
+			onClick={handleClick}
+		>
 			<CustomImage src={imageSrc} className={styles.icon} alt="Mosaic" />
 			<div className={styles.amount}>
 				<div>{integer}</div>

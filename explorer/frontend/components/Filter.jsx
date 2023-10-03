@@ -26,9 +26,17 @@ const FilterModal = ({ title, type, isSearchEnabled, options, onSearchRequest, o
 	const renderItem = item => {
 		switch (type) {
 			case 'account':
-				return <ValueAccount address={item.address} size="sm" onClick={() => onSelect(item.address)} />;
+				return <ValueAccount address={item.address} size="sm" isNavigationDisabled onClick={() => onSelect(item.address)} />;
 			case 'mosaic':
-				return <ValueMosaic mosaicName={item.name} mosaicId={item.id} size="md" onClick={() => onSelect(item.id)} />;
+				return (
+					<ValueMosaic
+						mosaicName={item.name}
+						mosaicId={item.id}
+						size="md"
+						isNavigationDisabled
+						onClick={() => onSelect(item.id)}
+					/>
+				);
 			case 'transaction-type':
 				return <ValueTransactionType value={item} onClick={() => onSelect(item)} />;
 			default:
@@ -42,7 +50,7 @@ const FilterModal = ({ title, type, isSearchEnabled, options, onSearchRequest, o
 		<div className={styles.modal} onClick={onClose}>
 			<Card className={styles.card} onClick={e => e.stopPropagation()}>
 				<ButtonClose className={styles.buttonClose} onClick={onClose} />
-				<h3>{title}</h3>
+				<h4>{title}</h4>
 				{isSearchEnabled && (
 					<TextBox iconSrc="/images/icon-search.svg" placeholder={type} value={text} onChange={handleSearchTextChange} />
 				)}
