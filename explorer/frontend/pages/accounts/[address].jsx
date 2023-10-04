@@ -22,7 +22,7 @@ import ValueTransactionType from '@/components/ValueTransactionType';
 import { STORAGE_KEY, TRANSACTION_TYPE } from '@/constants';
 import { fetchTransactionPage, getTransactionPage } from '@/pages/api/transactions';
 import styles from '@/styles/pages/AccountInfo.module.scss';
-import { arrayToText, useClientSideFilter, usePagination, useStorage, useUserCurrencyAmount } from '@/utils';
+import { arrayToText, formatTransactionCSV, useClientSideFilter, usePagination, useStorage, useUserCurrencyAmount } from '@/utils';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -49,7 +49,7 @@ export const getServerSideProps = async ({ locale, params }) => {
 const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 	const { address } = accountInfo;
 	const [userCurrency] = useStorage(STORAGE_KEY.USER_CURRENCY, 'usd');
-	const balanceInUserCurrency = useUserCurrencyAmount(getPriceByDate, accountInfo.balance, userCurrency, Date.now());
+	const balanceInUserCurrency = useUserCurrencyAmount(getPriceByDate, accountInfo.balance, userCurrency);
 	const { t } = useTranslation();
 	const transactionPagination = usePagination(fetchTransactionPage, preloadedTransactions);
 	const mosaics = useClientSideFilter(accountInfo.mosaics);
@@ -208,7 +208,11 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 							onChange={transactionPagination.changeFilter}
 							search={search}
 						/>
-						<ButtonCSV data={transactionPagination.data} fileName={`transactions-${address}`} />
+						<ButtonCSV
+							data={transactionPagination.data}
+							fileName={`transactions-${address}`}
+							format={row => formatTransactionCSV(row, t)}
+						/>
 					</div>
 					<Table
 						data={transactionPagination.data}

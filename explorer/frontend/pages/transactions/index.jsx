@@ -15,9 +15,9 @@ import ValueMosaic from '@/components/ValueMosaic';
 import ValueTransactionHash from '@/components/ValueTransactionHash';
 import ValueTransactionType from '@/components/ValueTransactionType';
 import { TRANSACTION_TYPE } from '@/constants';
-import { getTransactionPage } from '@/pages/api/transactions';
+import { fetchTransactionPage, getTransactionPage } from '@/pages/api/transactions';
 import styles from '@/styles/pages/TransactionList.module.scss';
-import { formatDate, useFilter, usePagination } from '@/utils';
+import { formatDate, formatTransactionCSV, useFilter, usePagination } from '@/utils';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -37,7 +37,7 @@ export const getServerSideProps = async ({ locale }) => {
 
 const TransactionInfo = ({ preloadedData, stats }) => {
 	const { t } = useTranslation();
-	const { requestNextPage, data, isLoading, isLastPage, filter, changeFilter } = usePagination(getTransactionPage, preloadedData);
+	const { requestNextPage, data, isLoading, isLastPage, filter, changeFilter } = usePagination(fetchTransactionPage, preloadedData);
 	const chart = useFilter(fetchTransactionChart, [], true);
 	const formattedChartData = chart.data.map(item => {
 		if (chart.filter.isPerDay) {
@@ -195,7 +195,7 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 							onChange={changeFilter}
 							search={search}
 						/>
-						<ButtonCSV data={data} fileName="transactions" />
+						<ButtonCSV data={data} fileName="transactions" format={row => formatTransactionCSV(row, t)} />
 					</div>
 					<Table
 						sections={transactionsGrouped}
