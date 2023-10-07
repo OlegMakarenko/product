@@ -1,5 +1,5 @@
-import { fetchChainHight } from '../api/blocks';
-import { fetchMosaicPage, getMosaicPage } from '../api/mosaics';
+import { fetchChainHight } from '@/api/blocks';
+import { fetchMosaicPage } from '@/api/mosaics';
 import FieldTimestamp from '@/components/FieldTimestamp';
 import ItemMosaicMobile from '@/components/ItemMosaicMobile';
 import Section from '@/components/Section';
@@ -8,14 +8,14 @@ import ValueAccount from '@/components/ValueAccount';
 import ValueBlockHeight from '@/components/ValueBlockHeight';
 import ValueTimestamp from '@/components/ValueTimestamp';
 import styles from '@/styles/pages/Home.module.scss';
-import { createPageHref, useAsyncCallOnMount, usePagination } from '@/utils';
+import { createPageHref, useAsyncCall, usePagination } from '@/utils';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 export const getServerSideProps = async ({ locale }) => {
-	const mosaicPage = await getMosaicPage();
+	const mosaicPage = await fetchMosaicPage();
 
 	return {
 		props: {
@@ -28,7 +28,7 @@ export const getServerSideProps = async ({ locale }) => {
 const Mosaics = ({ mosaics }) => {
 	const { t } = useTranslation();
 	const { requestNextPage, data, isLoading, pageNumber, isLastPage } = usePagination(fetchMosaicPage, mosaics);
-	const chainHeight = useAsyncCallOnMount(fetchChainHight, 0);
+	const chainHeight = useAsyncCall(fetchChainHight, 0);
 
 	const tableColumns = [
 		{
