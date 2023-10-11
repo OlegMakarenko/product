@@ -43,6 +43,10 @@ export const numberToShortString = num => {
 	return (value / si[index].v).toFixed(2).replace(/\.0+$|(\.[0-9]*[1-9])0+$/, '$1') + si[index].s;
 };
 
+export const numberToString = num => {
+	return (+num).toLocaleString('en').replace(/,/g, ' ');
+};
+
 export const truncateDecimals = (num, decimal) => {
 	const multiplier = Math.pow(10, decimal);
 	const adjustedNum = num * multiplier;
@@ -72,5 +76,31 @@ export const formatTransactionCSV = (row, translate) => {
 		[translate('table_field_height')]: row.height,
 		[translate('table_field_hash')]: row.hash,
 		[translate('table_field_value')]: row.value.map(item => `${item.amount}(${item.name})`).join(' ')
+	};
+};
+
+export const formatAccountCSV = (row, translate) => {
+	return {
+		[translate('table_field_address')]: row.address,
+		[translate('table_field_balance')]: row.balance,
+		[translate('table_field_importance')]: row.importance,
+		[translate('table_field_description')]: row.description
+	};
+};
+
+export const formatBlockCSV = (row, translate) => {
+	return {
+		[translate('table_field_height')]: row.height,
+		[translate('table_field_harvester')]: row.harvester,
+		[translate('table_field_transactionCount')]: row.transactionCount,
+		[translate('table_field_totalFee')]: row.totalFee,
+		[translate('table_field_timestamp')]: row.timestamp
+	};
+};
+
+export const formatMosaicCSV = (row, translate) => {
+	return {
+		[translate('table_field_name')]: row.name,
+		[translate('table_field_amount')]: row.amount
 	};
 };

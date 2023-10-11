@@ -11,6 +11,7 @@ const Table = ({
 	renderSectionHeader,
 	onEndReached,
 	isLoading,
+	isError,
 	isLastPage,
 	isLastColumnAligned
 }) => {
@@ -53,12 +54,17 @@ const Table = ({
 				sections.map((section, index) => (
 					<div className={styles.section} key={'sc' + index}>
 						<div className={styles.sectionHeader}>{renderSectionHeader(section)}</div>
+						<div className={styles.sectionHeaderLineMobile} />
 						<div className={`${styles.data} ${desktopTableStyle}`}>{section.data.map(renderRow)}</div>
 						{!!renderItemMobile && <div className={styles.listMobile}>{section.data.map(renderMobileListItem)}</div>}
 					</div>
 				))}
-
-			{!isLastPage && <TablePageLoader isLoading={isLoading} onLoad={onEndReached} />}
+			{!isLastPage && !isError && <TablePageLoader isLoading={isLoading} onLoad={onEndReached} />}
+			{!isLoading && isError && (
+				<div className={styles.tryAgainButton} onClick={onEndReached}>
+					{t('button_tryAgain')}
+				</div>
+			)}
 		</div>
 	);
 };

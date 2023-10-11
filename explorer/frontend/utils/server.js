@@ -16,15 +16,27 @@ export const createSearchCriteria = (searchCriteria = {}) => {
 
 	return {
 		pageNumber: isNaN(parsedPageNumber) ? 1 : parsedPageNumber,
-		pageSize: isNaN(parsedPageSize) ? 50 : parsedPageSize,
+		pageSize: isNaN(parsedPageSize) ? 10 : parsedPageSize,
 		filter
 	};
 };
 
-export const createPage = (data, pageNumber, formatter) => ({
-	data: formatter ? data.map(formatter) : data,
-	pageNumber
-});
+export const createPage = (data, pageNumber, formatter) => {
+	let formattedData;
+
+	if (!data.length) {
+		formattedData = [];
+	} else if (formatter) {
+		formattedData = data.map(formatter);
+	} else {
+		formattedData = data;
+	}
+
+	return {
+		data: formattedData,
+		pageNumber
+	};
+};
 
 export const createAPISearchURL = (baseURL, searchCriteria, filter = {}) => {
 	const limit = searchCriteria.pageSize;
