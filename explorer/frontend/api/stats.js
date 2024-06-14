@@ -1,7 +1,8 @@
 import { fetchAccountPage } from './accounts';
 import { fetchBlockPage } from './blocks';
 import config from '@/config';
-import { makeRequest, truncateDecimals } from '@/utils';
+import { truncateDecimals } from '@/utils/format';
+import { makeRequest } from '@/utils/server';
 
 export const fetchAccountStats = async () => {
 	const stats = await makeRequest(`${config.API_BASE_URL}/account/statistics`);
@@ -29,12 +30,30 @@ export const fetchAccountStats = async () => {
 
 export const fetchTransactionChart = async ({ isPerDay, isPerMonth }) => {
 	const filter = isPerDay ? 'perDay' : isPerMonth ? 'perMonth' : '';
+	const currentDate = new Date();
+	const endDateString = currentDate.toISOString().slice(0, 10);
 
 	switch (filter) {
-		case 'perDay':
-			return [];
-		case 'perMonth':
-			return [];
+		case 'perDay': {
+			const startDate = new Date();
+			startDate.setDate(startDate.getDate() - 90);
+			const startDateString = startDate.toISOString().slice(0, 10);
+			const response = await makeRequest(
+				`${config.API_BASE_URL}/transaction/daily?startDate=${startDateString}&endDate=${endDateString}`
+			);
+
+			return response.map(item => [item.date, item.totalTransactions]);
+		}
+		case 'perMonth': {
+			const startDate = new Date();
+			startDate.setMonth(startDate.getMonth() - 48);
+			const startDateString = startDate.toISOString().slice(0, 10);
+			const response = await makeRequest(
+				`${config.API_BASE_URL}/transaction/monthly?startDate=${startDateString}&endDate=${endDateString}`
+			);
+
+			return response.map(item => [`${item.month}-01`, item.totalTransactions]);
+		}
 		default:
 			return (await fetchBlockPage({ pageSize: 240 })).data.map(item => [item.height, item.transactionCount]).reverse();
 	}

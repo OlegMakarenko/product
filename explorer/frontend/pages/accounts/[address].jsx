@@ -250,7 +250,7 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 							)}
 						</div>
 						<Separator />
-						<div className="layout-flex-fill">
+						<div className="layout-flex-fill overflow-x-auto">
 							<AccountMultisigTree
 								address={accountInfo.address}
 								cosignatories={accountInfo.cosignatories}
@@ -272,11 +272,7 @@ const AccountInfo = ({ accountInfo, preloadedTransactions }) => {
 							onClear={transactionPagination.clearFilter}
 							search={search}
 						/>
-						<ButtonCSV
-							data={transactionPagination.data}
-							fileName={`transactions-${address}`}
-							format={row => formatTransactionCSV(row, t)}
-						/>
+						<ButtonCSV data={transactionPagination.data} fileName={`transactions-${address}`} format={formatTransactionCSV} />
 					</div>
 					<Table
 						data={transactionPagination.data}
