@@ -9,7 +9,7 @@ import ValueBlockHeight from './ValueBlockHeight';
 import ValueMosaic from './ValueMosaic';
 import ValueTransactionType from './ValueTransactionType';
 import styles from '@/styles/components/Filter.module.scss';
-import { useDataManager, useDelayedCall } from '@/utils';
+import { useDataManager, useDebounce } from '@/utils';
 import { useTranslation } from 'next-i18next';
 import { useEffect, useState } from 'react';
 
@@ -46,7 +46,11 @@ const renderItem = (item, type, onSelect) => {
 				/>
 			);
 		case 'transaction-type':
-			return <ValueTransactionType value={item.type} onClick={() => onSelect(item.type, item)} />;
+			return (
+				<div onClick={() => onSelect(item.type, item)}>
+					<ValueTransactionType value={item.type} />
+				</div>
+			);
 		default:
 			return item;
 	}
@@ -60,7 +64,7 @@ const FilterModal = ({ isVisible, title, type, isSearchEnabled, options, onSearc
 		if (searchResult?.[type]) setSearchResult(searchResult[type]);
 		else setSearchResult(null);
 	});
-	const [delayedSearch] = useDelayedCall(text => search(text));
+	const [delayedSearch] = useDebounce(text => search(text));
 	const handleSearchTextChange = text => {
 		setText(text);
 		delayedSearch(text);
@@ -208,8 +212,9 @@ const Filter = ({ isSelectedItemsShown, data, value, search, isDisabled, onChang
 					data.map(
 						(item, index) =>
 							selectedItems[item.name] && (
-								<div className={styles.selectedItem} key={index}>
+								<div className={styles.selectedItem} key={index} onClick={() => removeFilter(item)}>
 									{renderItem(selectedItems[item.name], item.type, () => removeFilter(item))}
+									<CustomImage src="/images/icon-close.svg" alt="Remove" className={styles.iconRemoveItem} />
 								</div>
 							)
 					)}
