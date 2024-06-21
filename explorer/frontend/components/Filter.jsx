@@ -96,7 +96,13 @@ const FilterModal = ({ isVisible, title, type, isSearchEnabled, options, onSearc
 			<ButtonClose className={styles.buttonClose} onClick={onClose} />
 			<h4>{title}</h4>
 			{isSearchEnabled && (
-				<TextBox iconSrc="/images/icon-search.svg" placeholder={type} value={text} onChange={handleSearchTextChange} />
+				<TextBox
+					role="searchbox"
+					iconSrc="/images/icon-search.svg"
+					placeholder={type}
+					value={text}
+					onChange={handleSearchTextChange}
+				/>
 			)}
 			{isLoading && <LoadingIndicator className={styles.loadingIndicator} />}
 			<Field title={listTitle} className={styles.resultListField}>
@@ -112,7 +118,7 @@ const FilterModal = ({ isVisible, title, type, isSearchEnabled, options, onSearc
 	);
 };
 
-const Filter = ({ isSelectedItemsShown, data, value, search, isDisabled, onChange, onClear }) => {
+const Filter = ({ isSelectedItemsShown, data, value, search, isDisabled, onChange }) => {
 	const { t } = useTranslation();
 	const [expandedFilter, setExpandedFilter] = useState({});
 	const [selectedItems, setSelectedItems] = useState({});
@@ -132,11 +138,7 @@ const Filter = ({ isSelectedItemsShown, data, value, search, isDisabled, onChang
 	const getTextStyle = name => `${styles.text} ${isFilerActive(name) ? styles.textActive : null}`;
 	const clear = () => {
 		setExpandedFilter(null);
-		if (onClear) {
-			onClear();
-		} else {
-			onChange({});
-		}
+		onChange({});
 	};
 	const handleFilterPress = filter => {
 		if (!isFilterAvailable(filter.name)) {
@@ -193,7 +195,7 @@ const Filter = ({ isSelectedItemsShown, data, value, search, isDisabled, onChang
 		<div className={styles.filter}>
 			<div className={styles.list}>
 				<div className={styles.button} onClick={clear} role="button">
-					<CustomImage src={'/images/icon-chip-clear.png?d=1'} className={styles.icon} />
+					<CustomImage src={'/images/icon-chip-clear.png?d=1'} className={styles.icon} alt="Clear" />
 					<div className={styles.text}>{t('button_clear')}</div>
 				</div>
 				{data.map((item, index) => (
@@ -201,6 +203,8 @@ const Filter = ({ isSelectedItemsShown, data, value, search, isDisabled, onChang
 						className={getButtonStyle(item.name)}
 						key={'filter' + index}
 						role="button"
+						aria-selected={isFilerActive(item.name)}
+						aria-disabled={!isFilterAvailable(item.name)}
 						onClick={() => !isDisabled && handleFilterPress(item, true)}
 					>
 						<div className={getTextStyle(item.name)}>{item.title}</div>
