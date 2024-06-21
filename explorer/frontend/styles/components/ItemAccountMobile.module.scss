@@ -2,16 +2,27 @@
 
 .itemAccountMobile {
     display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: $spacing-base / 2;
+    flex-direction: row;
+    gap: $spacing-base;
+    width: 100%;
 
-
-    .row {
+    .info {
         display: flex;
-        flex-direction: row;
-        gap: $spacing-base;
-        align-items: center;
-        justify-content: space-between;
+        flex: 1;
+        flex-direction: column;
+
+        .name {
+            font: $font-body-monospace;
+        }
+
+        .labels {
+            display: flex;
+            flex-direction: row;
+            gap: $spacing-base / 2;
+        }
+
+        .label__hidden {
+            opacity: 0;
+        }
     }
 }

@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom';
 import 'react-intersection-observer/test-utils';
-import { accountPageResult } from '../test-utils/account';
+import { accountPageResult } from '../test-utils/accounts';
 import { mosaicInfoResult } from '../test-utils/mosaics';
 import { transactionPageResult } from '../test-utils/transactions';
 import * as AccountService from '@/api/accounts';
 import * as BlockService from '@/api/blocks';
 import * as MosaicService from '@/api/mosaics';
 import * as TransactionService from '@/api/transactions';
-import MosaicInfo, { getServerSideProps } from '@/pages/mosaics/[id].jsx';
+import MosaicInfo, { getServerSideProps } from '@/pages/mosaics/[id]';
 import * as utils from '@/utils';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 

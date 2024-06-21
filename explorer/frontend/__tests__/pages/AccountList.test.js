@@ -1,11 +1,11 @@
 import '@testing-library/jest-dom';
 import 'react-intersection-observer/test-utils';
-import { accountPageResult } from '../test-utils/account';
+import { accountPageResult } from '../test-utils/accounts';
 import { setDevice } from '../test-utils/device';
 import { accountStatsResult } from '../test-utils/stats';
 import * as AccountService from '@/api/accounts';
 import * as StatsService from '@/api/stats';
-import AccountList, { getServerSideProps } from '@/pages/accounts/index.jsx';
+import AccountList, { getServerSideProps } from '@/pages/accounts/index';
 import { render, screen } from '@testing-library/react';
 
 jest.mock('@/api/accounts', () => {

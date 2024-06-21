@@ -3,7 +3,7 @@ import CustomImage from './CustomImage';
 import config from '@/config';
 import { ACCOUNT_STATE_CHANGE_ACTION, TRANSACTION_DIRECTION } from '@/constants';
 import styles from '@/styles/components/ValueMosaic.module.scss';
-import { createPageHref, numberToString } from '@/utils';
+import { createPageHref, handleNavigationItemClick, numberToString } from '@/utils';
 import Link from 'next/link';
 
 const ValueMosaic = ({
@@ -16,10 +16,7 @@ const ValueMosaic = ({
 	size,
 	onClick,
 	isNavigationDisabled,
-	isTickerShown,
-	chainHeight,
-	expirationHeight,
-	isUnlimitedDuration
+	isTickerShown
 }) => {
 	let displayedName;
 	let imageSrc;
@@ -35,8 +32,6 @@ const ValueMosaic = ({
 	const [integer, decimal] = isAmountExist ? amount.toString().split('.') : ['-'];
 	const finalMosaicId = isNative ? config.NATIVE_MOSAIC_ID : mosaicId;
 
-	const dot = !chainHeight ? null : isUnlimitedDuration ? 'green' : chainHeight < expirationHeight ? 'green' : 'red';
-
 	if (finalMosaicId === config.NATIVE_MOSAIC_ID) {
 		displayedName = isTickerShown ? config.NATIVE_MOSAIC_TICKER : '';
 		imageSrc = '/images/icon-mosaic-native.svg';
@@ -48,10 +43,7 @@ const ValueMosaic = ({
 	}
 
 	const handleClick = e => {
-		e.stopPropagation();
-		if (!onClick) return;
-		if (isNavigationDisabled) e.preventDefault();
-		onClick(finalMosaicId);
+		handleNavigationItemClick(e, onClick, finalMosaicId, isNavigationDisabled);
 	};
 
 	return size === 'md' ? (
@@ -61,7 +53,7 @@ const ValueMosaic = ({
 			title={title}
 			onClick={handleClick}
 		>
-			<Avatar type="mosaic" size="md" value={finalMosaicId} dot={dot} />
+			<Avatar type="mosaic" size="md" value={finalMosaicId} />
 			<div className={styles.valueMosaicMdTextSection}>
 				<div>{mosaicName}</div>
 				{isAmountExist && <div>{numberToString(amount)}</div>}

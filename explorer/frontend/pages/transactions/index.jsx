@@ -17,7 +17,15 @@ import ValueTransactionHash from '@/components/ValueTransactionHash';
 import ValueTransactionType from '@/components/ValueTransactionType';
 import { STORAGE_KEY, TRANSACTION_TYPE } from '@/constants';
 import styles from '@/styles/pages/TransactionList.module.scss';
-import { formatDate, formatTransactionCSV, numberToShortString, useFilter, usePagination, useStorage } from '@/utils';
+import {
+	formatTransactionCSV,
+	formatTransactionChart,
+	numberToShortString,
+	transactionChartFilterToType,
+	useFilter,
+	usePagination,
+	useStorage
+} from '@/utils';
 import Head from 'next/head';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -43,15 +51,8 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 		preloadedData
 	);
 	const chart = useFilter(fetchTransactionChart, [], true);
-	const formattedChartData = chart.data.map(item => {
-		if (chart.filter.isPerDay) {
-			return [formatDate(item[0], t), item[1]];
-		}
-		if (chart.filter.isPerMonth) {
-			return [formatDate(item[0], t, { hasDays: false }), item[1]];
-		}
-		return [t('chart_label_block', { height: item[0] }), item[1]];
-	});
+	const chartType = transactionChartFilterToType(chart.filter);
+	const formattedChartData = formatTransactionChart(chart.data, chartType, t);
 
 	const tableColumns = [
 		{
@@ -95,7 +96,7 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 
 	const transactionFilterConfig = [
 		{
-			name: 'type',
+			name: 'types',
 			title: t('filter_type'),
 			conflicts: ['mosaic', 'to'],
 			type: 'transaction-type',
@@ -113,7 +114,7 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 			name: 'to',
 			title: t('filter_to'),
 			type: 'account',
-			conflicts: ['type'],
+			conflicts: ['types'],
 			isSearchEnabled: true,
 			options: contacts
 		},
@@ -121,7 +122,7 @@ const TransactionInfo = ({ preloadedData, stats }) => {
 			name: 'mosaic',
 			title: t('filter_mosaic'),
 			type: 'mosaic',
-			conflicts: ['type'],
+			conflicts: ['types'],
 			isSearchEnabled: true
 		},
 		{
